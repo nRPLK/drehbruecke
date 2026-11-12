@@ -195,6 +195,7 @@ h1,.btn,.sign h1,.sign .tag,#score,.big,.tab,.coins,.coinbox,.reason,.rank,#ches
     <button class="btn alt sm" id="btnStatsM">📊 Statistik</button>
   </div>
   <div class="ms" id="missionsM"></div>
+  <div class="muted" style="font-size:12px;max-width:320px;opacity:.8">📊 Für Bestenliste & Statistik werden dein Name, Spielzeit und Punkte gespeichert – keine anderen Daten.</div>
 </div>
 
 <div id="over" class="ov hidden">
@@ -485,6 +486,15 @@ function segCircle(s,c){
 function hitObs(s,o){
   const m=TH/2-2;
   return colliders(o,st.t).some(c=>c.k==='c'?segCircle(s,c):segHitsRect(s.x1,s.y1,s.x2,s.y2,c.x1-m,c.y1-m,c.x2+m,c.y2+m));
+}
+
+// ---------- session tracking ----------
+let devId=LS.get('dev','');if(!devId){devId=Math.random().toString(36).slice(2,10);LS.set('dev',devId)}
+function logSession(){
+  if(!st||!st.startedAt||st.logged)return;st.logged=true;
+  const dur=Math.round(Math.min(7199,(performance.now()-st.startedAt)/1000));if(dur<3)return;
+  const body={u:devId,n:pname||'',g:group||'',m:st.mode||'classic',d:st.diff||'normal',k:skinId,s:st.score|0,dur,t:{'.sv':'timestamp'}};
+  resolveDB().then(db=>{if(!db)return;fetch(db+'/sessions.json',{method:'POST',keepalive:true,headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).catch(()=>{})});
 }
 
 // ---------- leaderboard ----------
@@ -923,6 +933,7 @@ function collapse(seg,reason){
 }
 
 function showOver(){
+  logSession();
   st.phase='over';st.overAt=performance.now();saveStats();
   $('prog').classList.add('hidden');
   $('timer').classList.add('hidden');
@@ -963,7 +974,7 @@ function revive(){
       const b=st.backup;st.segs=b.segs;st.px=b.px;st.py=b.py;st.a=Math.PI;st.combo=0;
       st.obs=st.obs.filter(o=>{const x=o.type==='bird'?birdPos(o,st.t).x:o.cx;return x>st.px+320||x<st.px-80});
       if(st.nextObsX<st.px+320)st.nextObsX=st.px+320;
-      st.falling=[];st.revived=true;st.phase='play';updHud();
+      st.falling=[];st.revived=true;st.phase='play';st.logged=false;st.startedAt=performance.now();updHud();
     }
   },1000);
 }
@@ -972,6 +983,7 @@ function start(){
   audio();MUS.on=true;
   applySkinTop();newGame('play');
   mission('runs',1);stat('runs',1);saveStats();
+  st.startedAt=performance.now();
   st.mode=mode;st.diff=diff;st.nextBoss=80;st.omega=omegaFor(0);
   if(!LS.get('tut',false)&&mode==='classic'){st.tut=1;st.nextObsX=1e9;st.omega=2.4}
   if(mode==='zen'){st.nextObsX=1e12;st.omega=3}
@@ -1058,7 +1070,7 @@ $('btnAchBack').onclick=()=>{$('achOv').classList.add('hidden');$(ovFrom).classL
 function setPause(p){if(st.phase!=='play'&&p)return;st.paused=p;$('pauseOv').classList.toggle('hidden',!p);sfx.click()}
 $('pause').onclick=e=>{e.stopPropagation();setPause(true)};
 $('btnResume').onclick=()=>setPause(false);
-$('btnQuit').onclick=()=>{st.paused=false;applySkinTop();$('timer').classList.add('hidden');$('prog').classList.add('hidden');$('pauseOv').classList.add('hidden');$('hud').classList.add('hidden');saveStats();newGame('menu');
+$('btnQuit').onclick=()=>{logSession();st.paused=false;applySkinTop();$('timer').classList.add('hidden');$('prog').classList.add('hidden');$('pauseOv').classList.add('hidden');$('hud').classList.add('hidden');saveStats();newGame('menu');
   $('menuCoins').textContent='🪙 '+coins;$('menuBest').textContent=best?'Bestwert: '+best:'';renderMissions('missionsM');$('lvlM').innerHTML=lvlHTML();$('menu').classList.remove('hidden')};
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&st.phase==='play'&&!st.paused)setPause(true)});
 $('tabLocal').onclick=()=>setTab('local');$('tabOnline').onclick=()=>setTab('online');
