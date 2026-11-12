@@ -186,6 +186,7 @@ h1,.btn,.sign h1,.sign .tag,#score,.big,.tab,.coins,.coinbox,.reason,.rank,#ches
   <button id="btnSet">⚙️</button>
   <div class="inrow"><input id="nameIn" maxlength="12" placeholder="Dein Name" autocomplete="off"><input id="groupIn" maxlength="16" placeholder="Gruppen-Code" autocomplete="off"></div>
   <div class="modes" id="modeTabs"><button class="tab" data-m="classic">🌉 Klassisch</button><button class="tab" data-m="rush">⏱ Zeit-Rush</button><button class="tab" data-m="zen">🧘 Zen</button></div>
+  <div class="modes" id="diffTabs"><button class="tab" data-d="easy">🟢 Leicht</button><button class="tab" data-d="normal">🟡 Normal</button><button class="tab" data-d="hard">🔴 Schwer</button></div>
   <button class="btn big" id="btnStart">▶ Spielen</button>
   <div class="row2">
     <button class="btn alt sm" id="btnShopM">🎨 Skins</button>
@@ -496,13 +497,16 @@ function resolveDB(){
   dbP=(async()=>{for(const u of DB_CANDS){try{const r=await fetch(u+'/scores.json?orderBy=%22s%22&limitToLast=1');if(r.ok){LS.set('dbUrl',u);ONLINE_DB=u;return u}}catch(e){}}dbP=null;return ''})();
   return dbP;
 }
+let diff=LS.get('diff','normal');
+const DIFF={easy:{n:'Leicht',i:'🟢',xp:0.5},normal:{n:'Normal',i:'🟡',xp:1},hard:{n:'Schwer',i:'🔴',xp:1.5}};
+function omegaFor(sc){const d=(st&&st.diff)||diff;return d==='easy'?Math.min(5.5,3.0+sc*0.02):d==='hard'?10:Math.min(10,4.4+sc*0.06)}
 let lbTab='local',lbSub='all',mode=LS.get('mode','classic'),group=LS.get('group','');
 function isoWeek(d){d=d||new Date();const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const day=t.getUTCDay()||7;t.setUTCDate(t.getUTCDate()+4-day);
   const y=t.getUTCFullYear(),w=Math.ceil(((t-Date.UTC(y,0,1))/86400000+1)/7);return {y,w,key:y+'-W'+w}}
 const obKey=()=>'ob_'+isoWeek().key+'_'+group;
 function submitOnline(score){
-  if(score<=0||!pname||score<=LS.get(obKey(),0))return;
-  const body={n:pname,s:score,t:{'.sv':'timestamp'},w:isoWeek().key};if(group)body.g=group;
+  if(score<=0||!pname||st.diff==='easy'||score<=LS.get(obKey(),0))return;
+  const body={n:pname,s:score,t:{'.sv':'timestamp'},w:isoWeek().key,d:st.diff};if(group)body.g=group;
   resolveDB().then(db=>{if(!db)return;
   fetch(db+'/scores.json',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
     .then(r=>{if(r.ok)LS.set(obKey(),score)}).catch(()=>{});});
@@ -519,8 +523,8 @@ function loadOnline(){
     const arr=Object.values(best).sort((a,b)=>b.s-a.s).slice(0,20),M=['🥇','🥈','🥉'];
     if(!arr.length){L.innerHTML='<div style="padding:14px;opacity:.8">Diese Woche noch niemand'+(useG?' in deiner Gruppe':'')+' – sei der Erste!</div>';return}
     L.innerHTML=arr.map((e,i)=>'<div class="r'+(pname&&e.n.toLowerCase()===pname.toLowerCase()?' me':'')+'"><span class="p">'+(M[i]||(i+1))+'</span><span class="n"></span><span class="s">'+e.s+'</span><span class="d">'+(e.t?new Date(e.t).toLocaleDateString('de-AT',{day:'2-digit',month:'2-digit'}):'')+'</span></div>').join('');
-    [...L.querySelectorAll('.n')].forEach((el,i)=>el.textContent=arr[i].n);
-    N.textContent=!pname?'Gib im Menü deinen Namen ein, damit du hier auftauchst.':'Neue Liste jeden Montag · nur Klassisch-Modus';
+    [...L.querySelectorAll('.n')].forEach((el,i)=>el.textContent=(arr[i].d==='hard'?'🔴 ':'🟡 ')+arr[i].n);
+    N.textContent=!pname?'Gib im Menü deinen Namen ein, damit du hier auftauchst.':'Neue Liste jeden Montag · nur Klassisch auf 🟡 Normal oder 🔴 Schwer';
   }).catch(()=>{L.innerHTML='<div style="padding:14px;opacity:.8">Keine Verbindung zur Online-Liste. (Funktioniert in der Web-Version bzw. HTML-Datei mit Internet.)</div>'});
   });
 }
@@ -532,14 +536,14 @@ function setTab(t){lbTab=t;$('tabLocal').classList.toggle('on',t==='local');$('t
 let board=LS.get('board',[]),pname=LS.get('name',''),lastEntry=null;
 function addToBoard(score){
   if(score<=0)return 0;
-  const e={n:pname||'Spieler',s:score,d:new Date().toLocaleDateString('de-AT',{day:'2-digit',month:'2-digit'}),id:Date.now()};
+  const e={n:pname||'Spieler',k:st.diff||'normal',s:score,d:new Date().toLocaleDateString('de-AT',{day:'2-digit',month:'2-digit'}),id:Date.now()};
   board.push(e);board.sort((a,b)=>b.s-a.s);board=board.slice(0,10);LS.set('board',board);
   const i=board.findIndex(x=>x.id===e.id);lastEntry=i>=0?e.id:null;return i+1;
 }
 function renderBoard(){
   const M=['🥇','🥈','🥉'];
   $('lbList').innerHTML=board.length?board.map((e,i)=>'<div class="r'+(e.id===lastEntry?' me':'')+'"><span class="p">'+(M[i]||(i+1))+'</span><span class="n"></span><span class="s">'+e.s+'</span><span class="d">'+e.d+'</span></div>').join(''):'<div style="padding:14px;opacity:.75">Noch keine Runden – leg los!</div>';
-  [...$('lbList').querySelectorAll('.n')].forEach((el,i)=>el.textContent=board[i].n);
+  [...$('lbList').querySelectorAll('.n')].forEach((el,i)=>el.textContent=(DIFF[board[i].k]||DIFF.normal).i+' '+board[i].n);
 }
 let boardFrom='menu';
 function openBoard(from){boardFrom=from;$(from).classList.add('hidden');$('board').classList.remove('hidden');setTab(lbTab);sfx.click()}
@@ -890,12 +894,12 @@ function tap(){
    for(let i=0;i<AL.length;i++)if(st.py>=AL[i][0]&&st.altStage<=i){st.altStage=i+1;st.banner={text:AL[i][1],t:0};sfx.record()}}
   if(st.py>TOP-130){if(!st.warned){st.warned=true;tone(880,0.12,'square',0.08);tone(880,0.12,'square',0.08,0,0.18);vib([30,60,30])}}
   else st.warned=false;
-  st.omega=Math.min(10,4.4+st.score*0.06);
+  st.omega=omegaFor(st.score);
   if(st.score>=15&&Math.random()<0.4)st.dir*=-1;
   mission('score60',st.score,true);
   if(st.tut){
     st.tut++;st.omega=2.4;st.dir=-1;
-    if(st.tut>3){st.tut=0;LS.set('tut',true);st.nextObsX=st.px+380;st.omega=4.4;st.banner={text:'LOS GEHT\'S!',t:0}}
+    if(st.tut>3){st.tut=0;LS.set('tut',true);st.nextObsX=st.px+380;st.omega=omegaFor(st.score);st.banner={text:'LOS GEHT\'S!',t:0}}
   } else if(st.mode!=='zen'&&st.score>=st.nextBoss&&!st.boss){spawnBoss();st.nextBoss+=rnd(90,120)}
   else if(st.mode!=='zen'&&st.score>=st.nextEvent){triggerEvent();st.nextEvent+=rnd(22,35)}
   if(st.boss&&st.px>st.boss.cx+230){const b=st.boss;st.boss=null;st.obs=st.obs.filter(o=>o!==b);st.score+=15;
@@ -926,7 +930,7 @@ function showOver(){
     $('overReason').textContent=adm?'🛠 Admin-Runde':rec&&rb>0?'🏆 Neuer Rush-Rekord!':st.reason;$('overScore').textContent=st.score;
     $('overBest').textContent='⏱ Rush-Rekord: '+Math.max(rb,adm?0:st.score);$('overRank').textContent='';
     $('overCoins').textContent='🪙 +'+st.coinsRun+'  ·  gesamt '+coins;$('btnRevive').classList.add('hidden');renderMissions('missionsO');
-    const gain=adm?0:st.score+st.coinsRun*2;if(gain)addXP(gain);$('lvlO').innerHTML=lvlHTML(gain);$('btnChest').classList.add('hidden');
+    const gain=adm?0:Math.round((st.score+st.coinsRun*2)*(DIFF[st.diff]||DIFF.normal).xp);if(gain)addXP(gain);$('lvlO').innerHTML=lvlHTML(gain);$('btnChest').classList.add('hidden');
     $('over').classList.remove('hidden');updHud();return}
   const adm=isAdmin(),prev=best,isRec=!adm&&st.score>best;
   if(isRec){best=st.score;LS.set('best',best)}
@@ -940,7 +944,7 @@ function showOver(){
   renderMissions('missionsO');
   const rk=adm?0:addToBoard(st.score);if(!adm)submitOnline(st.score);
   if(adm)$('overReason').textContent='🛠 Admin-Runde – zählt nicht für die Bestenliste';
-  const gain=adm?0:st.score+st.coinsRun*2;if(gain)addXP(gain);$('lvlO').innerHTML=lvlHTML(gain);
+  const gain=adm?0:Math.round((st.score+st.coinsRun*2)*(DIFF[st.diff]||DIFF.normal).xp);if(gain)addXP(gain);$('lvlO').innerHTML=lvlHTML(gain);
   chestTier=adm?0:st.score>=300?3:st.score>=200?2:st.score>=100?1:0;chestReady=chestTier>0;
   if(chestReady)$('btnChest').textContent=CHESTS[chestTier].i+' '+CHESTS[chestTier].n+' öffnen!';
   $('btnChest').classList.toggle('hidden',!chestReady);
@@ -968,7 +972,7 @@ function start(){
   audio();MUS.on=true;
   applySkinTop();newGame('play');
   mission('runs',1);stat('runs',1);saveStats();
-  st.mode=mode;st.nextBoss=80;
+  st.mode=mode;st.diff=diff;st.nextBoss=80;st.omega=omegaFor(0);
   if(!LS.get('tut',false)&&mode==='classic'){st.tut=1;st.nextObsX=1e9;st.omega=2.4}
   if(mode==='zen'){st.nextObsX=1e12;st.omega=3}
   if(mode==='rush'){st.timeLeft=60}
@@ -1028,6 +1032,8 @@ $('nameIn').value=pname;
 $('groupIn').value=group;
 $('groupIn').addEventListener('input',e=>{group=e.target.value.toLowerCase().replace(/[^a-z0-9äöü_-]/g,'').slice(0,16);e.target.value=group;LS.set('group',group)});
 function renderModes(){[...document.querySelectorAll('#modeTabs .tab')].forEach(b=>b.classList.toggle('on',b.dataset.m===mode))}
+function renderDiff(){[...document.querySelectorAll('#diffTabs .tab')].forEach(b=>b.classList.toggle('on',b.dataset.d===diff))}
+[...document.querySelectorAll('#diffTabs .tab')].forEach(b=>b.onclick=()=>{diff=b.dataset.d;LS.set('diff',diff);renderDiff();sfx.click()});renderDiff();
 [...document.querySelectorAll('#modeTabs .tab')].forEach(b=>b.onclick=()=>{mode=b.dataset.m;LS.set('mode',mode);renderModes();sfx.click()});renderModes();
 let setFrom='menu';
 function openSet(from){setFrom=from;$(from).classList.add('hidden');$('setOv').classList.remove('hidden');$('setMus').value=settings.mus;$('setSfx').value=settings.sfx;$('setVib').checked=settings.vib}
