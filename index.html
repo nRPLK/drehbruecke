@@ -457,18 +457,28 @@ function hitObs(s,o){
 
 // ---------- leaderboard ----------
 // Firebase Realtime Database URL hier eintragen, z. B. 'https://drehbruecke-xxxx-default-rtdb.europe-west1.firebasedatabase.app'
-const ONLINE_DB='';
+const DB_CANDS=['https://drehbruecke-default-rtdb.europe-west1.firebasedatabase.app','https://drehbruecke-default-rtdb.firebaseio.com'];
+let ONLINE_DB=LS.get('dbUrl','')||'x',dbP=null;
+function resolveDB(){
+  if(LS.get('dbUrl',''))return Promise.resolve(LS.get('dbUrl',''));
+  if(dbP)return dbP;
+  dbP=(async()=>{for(const u of DB_CANDS){try{const r=await fetch(u+'/scores.json?orderBy=%22s%22&limitToLast=1');if(r.ok){LS.set('dbUrl',u);ONLINE_DB=u;return u}}catch(e){}}dbP=null;return ''})();
+  return dbP;
+}
 let lbTab='local',onlineBest=LS.get('onlineBest',0);
 function submitOnline(score){
-  if(!ONLINE_DB||score<=0||!pname||score<=onlineBest)return;
-  fetch(ONLINE_DB+'/scores.json',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({n:pname,s:score,t:{'.sv':'timestamp'}})})
-    .then(r=>{if(r.ok){onlineBest=score;LS.set('onlineBest',score)}}).catch(()=>{});
+  if(score<=0||!pname||score<=onlineBest)return;
+  resolveDB().then(db=>{if(!db)return;
+  fetch(db+'/scores.json',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({n:pname,s:score,t:{'.sv':'timestamp'}})})
+    .then(r=>{if(r.ok){onlineBest=score;LS.set('onlineBest',score)}}).catch(()=>{});});
 }
 function loadOnline(){
   const L=$('lbList'),N=$('lbNote');N.textContent='';
-  if(!ONLINE_DB){L.innerHTML='<div style="padding:14px;opacity:.8">Online-Liste ist noch nicht eingerichtet.</div>';return}
   L.innerHTML='<div style="padding:14px;opacity:.8">Lade …</div>';
-  fetch(ONLINE_DB+'/scores.json?orderBy=%22s%22&limitToLast=50').then(r=>r.json()).then(d=>{
+  resolveDB().then(db=>{
+  if(!db){L.innerHTML='<div style="padding:14px;opacity:.8">Keine Verbindung zur Online-Liste. (In der Claude-Vorschau blockiert – öffne nrplk.github.io/drehbruecke.)</div>';return}
+  L.innerHTML='<div style="padding:14px;opacity:.8">Lade …</div>';
+  fetch(db+'/scores.json?orderBy=%22s%22&limitToLast=50').then(r=>r.json()).then(d=>{
     const best={};Object.values(d||{}).forEach(e=>{if(e&&typeof e.s==='number'&&typeof e.n==='string'){const k=e.n.toLowerCase();if(!best[k]||e.s>best[k].s)best[k]=e}});
     const arr=Object.values(best).sort((a,b)=>b.s-a.s).slice(0,20),M=['🥇','🥈','🥉'];
     if(!arr.length){L.innerHTML='<div style="padding:14px;opacity:.8">Noch niemand online – sei der Erste!</div>';return}
@@ -476,6 +486,7 @@ function loadOnline(){
     [...L.querySelectorAll('.n')].forEach((el,i)=>el.textContent=arr[i].n);
     if(!pname)N.textContent='Gib im Menü deinen Namen ein, damit du hier auftauchst.';
   }).catch(()=>{L.innerHTML='<div style="padding:14px;opacity:.8">Keine Verbindung zur Online-Liste. (Funktioniert in der Web-Version bzw. HTML-Datei mit Internet.)</div>'});
+  });
 }
 function setTab(t){lbTab=t;$('tabLocal').classList.toggle('on',t==='local');$('tabOnline').classList.toggle('on',t==='online');if(t==='local'){renderBoard();$('lbNote').textContent=''}else loadOnline()}
 let board=LS.get('board',[]),pname=LS.get('name',''),lastEntry=null;
