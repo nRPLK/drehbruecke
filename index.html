@@ -194,7 +194,7 @@ h1,.btn,.sign h1,.sign .tag,#score,.big,.tab,.coins,.coinbox,.reason,.rank,#ches
     <button class="btn alt sm" id="btnShopO">🎨 Skins</button>
     <button class="btn alt sm" id="btnBoardO">🏆 Bestenliste</button>
   </div>
-  <button class="btn alt" id="btnChallenge">📲 Herausforderung kopieren</button>
+  <button class="btn" id="btnHome">🏠 Hauptmenü</button>
   <div class="tapnote">Tippe irgendwo für eine neue Runde</div>
 </div>
 
@@ -854,7 +854,7 @@ function showOver(){
   $('overReason').textContent=isRec&&prev>0?'🏆 Neuer Rekord!':st.reason;
   $('overScore').textContent=st.score;
   const miss=prev-st.score;
-  $('overBest').textContent=isRec?'Bestwert: '+best:(miss<=10?'Nur '+(miss+1)+(miss===0?' Punkt':' Punkte')+' bis zum Rekord! ('+best+')':'Bestwert: '+best);
+  $('overBest').textContent=isRec?'Bestwert: '+best:(prev>0&&miss<=10?'Nur '+(miss+1)+(miss===0?' Punkt':' Punkte')+' bis zum Rekord! ('+best+')':'Bestwert: '+best);
   $('overCoins').textContent='🪙 +'+st.coinsRun+'  ·  gesamt '+coins;
   $('btnRevive').classList.toggle('hidden',st.revived);
   renderMissions('missionsO');
@@ -865,7 +865,6 @@ function showOver(){
   if(chestReady)$('btnChest').textContent=CHESTS[chestTier].i+' '+CHESTS[chestTier].n+' öffnen!';
   $('btnChest').classList.toggle('hidden',!chestReady);
   $('overRank').textContent=rk===1&&board.length>1?'🥇 Platz 1 auf der Bestenliste!':rk>0&&rk<=10&&board.length>1?'🏆 Platz '+rk+' auf der Bestenliste':'';
-  $('btnChallenge').textContent='📲 Herausforderung kopieren';
   $('over').classList.remove('hidden');
   updHud();
 }
@@ -963,10 +962,9 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden&&st.phase==
 $('tabLocal').onclick=()=>setTab('local');$('tabOnline').onclick=()=>setTab('online');
 $('btnBoardO').onclick=e=>{e.stopPropagation();openBoard('over')};
 $('btnBoardBack').onclick=()=>{$('board').classList.add('hidden');$(boardFrom).classList.remove('hidden')};
-$('btnChallenge').onclick=e=>{e.stopPropagation();
-  const txt='🌉 '+(pname||'Ich')+' hat '+st.score+' Punkte in Drehbrücke geschafft (Rekord: '+best+')! Schaffst du mehr? 😏';
-  const done=()=>{$('btnChallenge').textContent='✅ Kopiert – jetzt in WhatsApp einfügen'};
-  try{navigator.clipboard.writeText(txt).then(done,()=>{$('btnChallenge').textContent=txt})}catch(err){$('btnChallenge').textContent=txt}};
+$('btnHome').onclick=e=>{e.stopPropagation();sfx.click();applySkinTop();
+  ['over','hud','prog','chestOv'].forEach(i=>$(i).classList.add('hidden'));newGame('menu');
+  $('menuCoins').textContent='🪙 '+coins;$('menuBest').textContent=best?'Bestwert: '+best:'';renderMissions('missionsM');$('lvlM').innerHTML=lvlHTML();$('menu').classList.remove('hidden')};
 cv.addEventListener('pointerdown',e=>{e.preventDefault();audio();tap()});
 addEventListener('keydown',e=>{if(e.target&&e.target.tagName==='INPUT')return;if(e.code==='Space'||e.code==='Enter'){e.preventDefault();tap()}});
 
