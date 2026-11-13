@@ -281,7 +281,7 @@ h1,.btn,.sign h1,.sign .tag,#score,.big,.tab,.coins,.coinbox,.reason,.rank,#ches
 const cv=document.getElementById('c'),ctx=cv.getContext('2d');
 const $=id=>document.getElementById(id);
 let TOP=400,FITTOP=400;
-const ANCH=70,GROUND=-230,L=90,TH=14,LIMIT=55,PERFECT=7,GOOD=14;
+const ANCH=70,GROUND=-230,L=90,TH=14,LIMIT=60,PERFECT=7,GOOD=14;
 let W,H,S;
 function resize(){
   const d=Math.min(2,window.devicePixelRatio||1);
@@ -382,7 +382,7 @@ const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 let st;
 function newGame(phase){
   st={phase,segs:[],px:0,py:0,a:Math.PI,dir:-1,omega:4.4,score:0,combo:0,revived:false,
-      buffs:{slow:0,magnet:0,wide:0,inv:0,zeit:0},pups:[],shield:false,rings:[],flys:[],zoom:0,paused:false,world:{from:0,to:0,t:1},Lcur:L,limCur:LIMIT,pulse:false,pulseT:0,blockT:0,storm:0,stormOff:0,nextEvent:30,tut:0,banner:null,obs:[],coins:[],anchors:[],anchor:null,coinsRun:0,recordBeaten:false,nextObsX:L*4,cam:{x:0},camY:0,topBoost:0,altStage:0,pops:[],parts:[],falling:[],shake:0,t:0};
+      buffs:{slow:0,magnet:0,wide:0,inv:0,zeit:0},pups:[],shield:false,rings:[],flys:[],zoom:0,paused:false,world:{from:0,to:0,t:1},Lcur:L,limCur:LIMIT,pulse:false,pulseT:0,blockT:0,storm:0,stormOff:0,nextEvent:45,tut:0,banner:null,obs:[],coins:[],anchors:[],anchor:null,coinsRun:0,recordBeaten:false,nextObsX:L*4,cam:{x:0},camY:0,topBoost:0,altStage:0,pops:[],parts:[],falling:[],shake:0,t:0};
 }
 newGame('menu');
 
@@ -424,8 +424,8 @@ function colliders(o,t){
 
 function genPattern(){
   const GT=Math.min(TOP,FITTOP);
-  const x=st.nextObsX,diff=Math.min(1,st.score/70),roll=Math.random();
-  const gap=Math.max(128,rnd(150,172)-diff*25);
+  const x=st.nextObsX,diff=Math.min(1,st.score/160),roll=Math.random();
+  const gap=Math.max(145,rnd(168,192)-diff*25);
   const tree=(maxTop)=>{const r=rnd(42,62);let h=rnd(90,190+diff*150);h=Math.min(h,maxTop-GROUND-r*1.55);return mkTree(x,Math.max(60,h),r)};
   const coin=(cx,cy,p)=>{if(Math.random()<p)st.coins.push({x:cx,y:clamp(cy,GROUND+45,TOP-30),ph:rnd(0,6)})};
   if(roll<0.30){const t=tree(GT-170);st.obs.push(t);coin(x,t.crownTop+38,0.75)}
@@ -439,7 +439,7 @@ function genPattern(){
     const r=rnd(38,46),t=tree(GT-gap-r*2-60);st.obs.push(t);
     st.obs.push(mkBalloon(x+rnd(-10,10),t.crownTop+gap+r+42,r));coin(x,t.crownTop+gap/2,0.9);
   }
-  const step=rnd(2.7*L,4.2*L)-diff*0.9*L;
+  const step=rnd(3.2*L,4.7*L)-diff*0.8*L;
   coin(x+step/2,st.py>220?st.py+rnd(-200,250):rnd(GROUND+80,FITTOP-80),0.4);
   if(st.score>8&&Math.random()<0.08){const q=Math.random(),kind=q<0.38?'shield':q<0.66?'magnet':'rocket';
     const py=st.py>Math.min(TOP,FITTOP)-100?rnd(Math.max(GROUND+90,st.py-200),Math.min(TOP-60,st.py+200)):rnd(GROUND+90,Math.min(TOP,FITTOP)-90);
@@ -510,7 +510,7 @@ function resolveDB(){
 }
 let diff=LS.get('diff','normal');
 const DIFF={easy:{n:'Leicht',i:'🟢',xp:0.5},normal:{n:'Normal',i:'🟡',xp:1},hard:{n:'Schwer',i:'🔴',xp:1.5}};
-function omegaFor(sc){const d=(st&&st.diff)||diff;return d==='easy'?Math.min(5.5,3.0+sc*0.02):d==='hard'?10:Math.min(10,4.4+sc*0.06)}
+function omegaFor(sc){const d=(st&&st.diff)||diff;return d==='easy'?Math.min(5.5,3.0+sc*0.02):d==='hard'?10:Math.min(8.5,3.9+sc*0.033)}
 let lbTab='local',lbSub='all',mode=LS.get('mode','classic'),group=LS.get('group','');
 function isoWeek(d){d=d||new Date();const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const day=t.getUTCDay()||7;t.setUTCDate(t.getUTCDate()+4-day);
   const y=t.getUTCFullYear(),w=Math.ceil(((t-Date.UTC(y,0,1))/86400000+1)/7);return {y,w,key:y+'-W'+w}}
@@ -1003,7 +1003,7 @@ function start(){
   applySkinTop();newGame('play');
   mission('runs',1);stat('runs',1);saveStats();
   st.startedAt=performance.now();
-  st.mode=mode;st.diff=diff;st.nextBoss=80;st.omega=omegaFor(0);
+  st.mode=mode;st.diff=diff;st.nextBoss=120;st.omega=omegaFor(0);
   if(!LS.get('tut',false)&&mode==='classic'){st.tut=1;st.nextObsX=1e9;st.omega=2.4}
   if(mode==='zen'){st.nextObsX=1e12;st.omega=3}
   if(mode==='rush'){st.timeLeft=60}
