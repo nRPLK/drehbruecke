@@ -1153,7 +1153,7 @@ function showOver(){
   const miss=prev-st.score;
   $('overBest').textContent=isRec?'Bestwert: '+best:(prev>0&&miss<=10?'Nur '+(miss+1)+(miss===0?' Punkt':' Punkte')+' bis zum Rekord! ('+best+')':'Bestwert: '+best);
   $('overCoins').textContent='🪙 +'+st.coinsRun+'  ·  gesamt '+coins;
-  $('btnRevive').classList.toggle('hidden',st.revived&&!st.extraLife);$('btnRevive').textContent=st.extraLife?'💖 Extra-Leben benutzen':'▶ Video ansehen & weiterspielen';
+  $('btnRevive').classList.remove('hidden');$('btnRevive').textContent=st.extraLife?'💖 Extra-Leben benutzen':'▶ Video ansehen & weiterspielen';
   renderMissions('missionsO');
   const rk=adm?0:addToBoard(st.score);if(!adm)submitOnline(st.score);
   if(adm)$('overReason').textContent='🛠 Admin-Runde – zählt nicht für die Bestenliste';
@@ -1187,7 +1187,7 @@ function doRevive(){
       const b=st.backup;st.segs=b.segs;st.px=b.px;st.py=b.py;st.a=Math.PI;st.combo=0;
       st.obs=st.obs.filter(o=>{const x=o.type==='bird'?birdPos(o,st.t).x:o.cx;return x>st.px+320||x<st.px-80});
       if(st.nextObsX<st.px+320)st.nextObsX=st.px+320;
-      st.falling=[];st.revived=true;st.phase='play';st.logged=false;st.startedAt=performance.now();updHud();cg(S=>S.game.gameplayStart());
+      st.falling=[];st.revived=true;st.revives=(st.revives||0)+1;st.phase='play';st.logged=false;st.startedAt=performance.now();updHud();cg(S=>S.game.gameplayStart());
 }
 function revive(){
   if(st.extraLife){st.extraLife=false;$('over').classList.add('hidden');doRevive();toast('💖 Extra-Leben benutzt!');return}
