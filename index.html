@@ -220,12 +220,20 @@ h1,.btn,.sign h1,.sign .tag,#score,.big,.tab,.coins,.coinbox,.reason,.rank,#ches
     <button class="ib" id="btnAchM"><span>🏅</span>Erfolge</button>
     <button class="ib" id="btnStatsM"><span>📊</span>Statistik</button>
     <button class="ib" id="btnWheelM"><span>🎡</span>Glücksrad<i id="wheelBadge">!</i></button>
+    <button class="ib" id="btnPassM"><span>🎫</span>Saison<i id="passBadge"></i></button>
   </div>
+</div>
+
+<div id="passOv" class="ov hidden">
+  <h1 style="font-size:34px">🎫 Saison-Pass</h1>
+  <div class="lvl" id="passHead" style="max-width:340px;width:100%"></div>
+  <div class="grid" id="passList"></div>
+  <button class="btn alt" id="btnPassBack">Zurück</button>
 </div>
 
 <div id="modeOv" class="ov hidden">
   <h1 style="font-size:34px">🎮 Spielmodus</h1>
-  <div class="modes" id="modeTabs"><button class="tab" data-m="classic">🌉 Klassisch</button><button class="tab" data-m="rush">⏱ Zeit-Rush</button><button class="tab" data-m="zen">🧘 Zen</button></div>
+  <div class="modes" id="modeTabs"><button class="tab" data-m="classic">🌉 Klassisch</button><button class="tab" data-m="rush">⏱ Zeit-Rush</button><button class="tab" data-m="zen">🧘 Zen</button><button class="tab" data-m="daily">📅 Tages-Challenge</button></div>
   <div class="muted" id="modeInfo"></div>
   <h1 style="font-size:28px;margin-top:8px">Schwierigkeit</h1>
   <div class="modes" id="diffTabs"><button class="tab" data-d="easy">🟢 Leicht</button><button class="tab" data-d="normal">🟡 Normal</button><button class="tab" data-d="hard">🔴 Schwer</button></div>
@@ -280,6 +288,7 @@ h1,.btn,.sign h1,.sign .tag,#score,.big,.tab,.coins,.coinbox,.reason,.rank,#ches
   <div class="coins" id="overCoins"></div>
   <button class="btn chest hidden" id="btnChest">🎁 Truhe öffnen!</button>
   <div class="ms" id="missionsO"></div>
+  <button class="btn chest hidden" id="btnDbl">📺 Münzen verdoppeln</button>
   <button class="btn ad" id="btnRevive">▶ Video ansehen &amp; weiterspielen</button>
   <button class="btn alt" id="btnShare">📸 Ergebnis teilen</button>
   <div class="row2">
@@ -292,7 +301,7 @@ h1,.btn,.sign h1,.sign .tag,#score,.big,.tab,.coins,.coinbox,.reason,.rank,#ches
 
 <div id="board" class="ov hidden">
   <h1 style="font-size:34px">🏆 Bestenliste</h1>
-  <div class="tabs"><button class="tab on" id="tabLocal">📱 Meine</button><button class="tab" id="tabOnline">🌍 Online</button></div>
+  <div class="tabs"><button class="tab on" id="tabLocal">📱 Meine</button><button class="tab" id="tabOnline">🌍 Woche</button><button class="tab" id="tabDaily">📅 Heute</button></div>
   <div class="wk hidden" id="wkLabel"></div>
   <div id="onlineSub" class="hidden"><button class="tab on" id="subAll">🌍 Alle</button><button class="tab" id="subGrp">👥 Gruppe</button></div>
   <div class="lb" id="lbList"></div>
@@ -405,15 +414,16 @@ const SKINS=[
   {id:'chrono',name:'Zeitreisender',price:500,base:'#3949ab',hi:'#c5cae9',glow:'#8c9eff',top:540,wave:'triangle',snd:'space',anim:'galaxy'},
   {id:'bastion',name:'Bastion',price:700,base:'#455a64',hi:'#cfd8dc',top:560,wave:'square',snd:'stone',style:'chain'},
   {id:'treasure',name:'Schatzjäger',price:650,base:'#8d6e00',hi:'#ffe082',glow:'#ffd54f',top:560,wave:'sine',snd:'steel',fx:'stars'},
+  {id:'crown',name:'Saison-Krone',price:0,base:'#b8860b',hi:'#fff3b0',glow:'#ffd700',top:600,wave:'triangle',snd:'gold',fx:'stars',pass:true},
   {id:'xmas',name:'Weihnachten',chest:true,base:'#c62828',hi:'#ffffff',glow:'#ffd23a',top:560,wave:'triangle',snd:'crystal',dash:true,fx:'snow'},
   {id:'admin',name:'🛠 Admin',admin:true,base:'#111111',hi:'#ffe600',glow:'#ffe600',top:700,wave:'square',snd:'admin',anim:'admin'}];
 const RAR={c:{n:'Gewöhnlich',col:'#9ca3af'},r:{n:'Selten',col:'#3b82f6'},e:{n:'Episch',col:'#a855f7'},l:{n:'Legendär',col:'#f59e0b'},m:{n:'Mythisch',col:'#ef4444'}};
-{const RA={clover:'e',chrono:'e',bastion:'l',treasure:'l',xmas:'l',wood:'c',bamboo:'c',stone:'c',steel:'c',rope:'c',ice:'r',candy:'r',pixel:'r',neon:'r',chain:'r',vine:'r',cloud:'r',love:'r',snow:'r',lava:'e',emerald:'e',rainbow:'e',crystal:'e',water:'e',electric:'e',gold:'l',galaxy:'l',diamond:'l',dragon:'l',stardust:'l',phoenix:'l',shadow:'m',void:'m',prism:'m',admin:'m'};
+{const RA={crown:'l',clover:'e',chrono:'e',bastion:'l',treasure:'l',xmas:'l',wood:'c',bamboo:'c',stone:'c',steel:'c',rope:'c',ice:'r',candy:'r',pixel:'r',neon:'r',chain:'r',vine:'r',cloud:'r',love:'r',snow:'r',lava:'e',emerald:'e',rainbow:'e',crystal:'e',water:'e',electric:'e',gold:'l',galaxy:'l',diamond:'l',dragon:'l',stardust:'l',phoenix:'l',shadow:'m',void:'m',prism:'m',admin:'m'};
  for(const k of SKINS)k.rar=RA[k.id]||'c';}
 // Fähigkeiten der Skins: coin = Chance auf doppelte Münze, perfect = +° Perfekt-Zone, slow = langsamer drehen, magnet/double = +s Dauer, pup = +Power-up-Chance, shield = Startschild, xp = +XP, combo = Combo-Retter, bh = immun gegen Schwarze Löcher
 const PERKS={steel:{magnet:2},ice:{slow:0.03},neon:{xp:0.1},pixel:{pup:0.02},candy:{coin:0.08},chain:{combo:1},vine:{pup:0.03},cloud:{slow:0.04},love:{coin:0.12},snow:{slow:0.05},rope:{perfect:0.5},bamboo:{xp:0.05},stone:{magnet:1},
   lava:{double:3},emerald:{perfect:1},rainbow:{xp:0.2},crystal:{perfect:1.5},water:{pup:0.04},electric:{double:4},clover:{pup:0.05,coin:0.1},chrono:{slow:0.08},
-  gold:{coin:0.25},galaxy:{xp:0.3,pup:0.03},diamond:{perfect:2,coin:0.15},dragon:{double:5,magnet:3},stardust:{xp:0.25,coin:0.15},phoenix:{shield:1},bastion:{shield:1,combo:1},treasure:{coin:0.35},xmas:{coin:0.2,slow:0.04},
+  gold:{coin:0.25},galaxy:{xp:0.3,pup:0.03},diamond:{perfect:2,coin:0.15},dragon:{double:5,magnet:3},stardust:{xp:0.25,coin:0.15},phoenix:{shield:1},bastion:{shield:1,combo:1},treasure:{coin:0.35},crown:{coin:0.2,xp:0.25,perfect:1},xmas:{coin:0.2,slow:0.04},
   shadow:{combo:2,perfect:1},void:{bh:1,xp:0.2},prism:{perfect:2,pup:0.05,xp:0.2}};
 const PERK_TXT={coin:v=>'🪙 +'+Math.round(v*100)+' % Doppel-Münze',perfect:v=>'🎯 +'+v+'° Perfekt-Zone',slow:v=>'🐢 '+Math.round(v*100)+' % langsamer',magnet:v=>'🧲 Magnet +'+v+' s',double:v=>'⭐ Doppelt +'+v+' s',
   pup:v=>'🍀 +'+Math.round(v*100)+' % Power-ups',shield:v=>'🛡 Startet mit Schild',xp:v=>'⭐ +'+Math.round(v*100)+' % XP',combo:v=>'🔗 Combo-Retter ×'+v,bh:v=>'🕳 Immun gg. Schwarze Löcher'};
@@ -431,7 +441,7 @@ let upg=LS.get('upg',{}),items=LS.get('items',{});
 const upCost=u=>Math.round(u.base*Math.pow((upg[u.id]||0)+1,1.6));
 const ITEMS=[{id:'shield',i:'🛡',n:'Start-Schild',d:'Startet die nächste Runde mit Schild',p:60},{id:'rocket',i:'🚀',n:'Start-Rakete',d:'Raketen-Schub direkt am Anfang',p:90},
  {id:'double',i:'⭐',n:'Punkte-Booster',d:'15 s doppelte Punkte zum Start',p:70},{id:'magnet',i:'🧲',n:'Start-Magnet',d:'20 s Magnet zum Start',p:50},{id:'revive',i:'💖',n:'Extra-Leben',d:'Einmal ohne Video weiterspielen',p:150}];
-function bonus(k){let v=0;for(const u of UPG)if(u.key===k)v+=(upg[u.id]||0)*u.per;const p=PERKS[skinId];if(p&&p[k])v+=p[k];return v}
+function bonus(k){if(st&&st.mode==='daily'&&k!=='bh')return 0;let v=0;for(const u of UPG)if(u.key===k)v+=(upg[u.id]||0)*u.per;const p=PERKS[skinId];if(p&&p[k])v+=p[k];return v}
 const isAdmin=()=>skinId==='admin'&&(pname||'').toLowerCase()==='admin';
 function applySkinTop(){FITTOP=460;TOP=1e6;resize()}
 
@@ -480,7 +490,11 @@ const sfx={
 };
 function vib(p){if(!settings.vib)return;try{navigator.vibrate&&navigator.vibrate(p)}catch(e){}}
 const norm=a=>{a=(a+Math.PI)%(2*Math.PI);if(a<0)a+=2*Math.PI;return a-Math.PI};
-const rnd=(a,b)=>a+Math.random()*(b-a);
+let gR=Math.random;
+function seedRng(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const dayKey=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+const daySeed=()=>{let h=2166136261;for(const c of 'db'+dayKey())h=Math.imul(h^c.charCodeAt(0),16777619);return h>>>0};
+const rnd=(a,b)=>a+gR()*(b-a),vrnd=(a,b)=>a+Math.random()*(b-a);
 const hash=i=>{const s=Math.sin(i*127.1+311.7)*43758.5453;return s-Math.floor(s)};
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 
@@ -501,7 +515,7 @@ function mkTree(cx,h,r){
 function mkBird(x,y,amp,vx){return {type:'bird',x0:x,y0:y,amp,vx,ph:rnd(0,6.28),fr:rnd(1.2,2.2),t0:st.t,r:20,minX:x-30,maxX:x+30}}
 function mkZep(cx,y){return {type:'zep',cx,y0:y,ph:rnd(0,6.28),minX:cx-80,maxX:cx+80}}
 function zepY(o,t){return o.y0+8*Math.sin(t*0.7+o.ph)}
-function mkAst(cx,y){const r=rnd(24,40);return {type:'ast',cx,y0:y,r,ph:rnd(0,6.28),rot:rnd(-1.5,1.5),minX:cx-r,maxX:cx+r,pts:[...Array(9)].map((_,i)=>0.78+Math.random()*0.3)}}
+function mkAst(cx,y){const r=rnd(24,40);return {type:'ast',cx,y0:y,r,ph:rnd(0,6.28),rot:rnd(-1.5,1.5),minX:cx-r,maxX:cx+r,pts:[...Array(9)].map((_,i)=>0.78+gR()*0.3)}}
 function mkUfo(cx,y){return {type:'ufo',cx,y0:y,ph:rnd(0,6.28),rng:rnd(40,80),minX:cx-100,maxX:cx+100}}
 function ufoPos(o,t){return {x:o.cx+Math.sin(t*0.9+o.ph)*o.rng,y:o.y0+6*Math.sin(t*2+o.ph)}}
 function mkAlien(cx,y){return {type:'alien',cx,y0:y,ph:rnd(0,6.28),minX:cx-30,maxX:cx+30}}
@@ -529,13 +543,13 @@ function colliders(o,t){
 
 function genPattern(){
   const GT=Math.min(TOP,FITTOP);
-  const x=st.nextObsX,diff=Math.min(1,st.score/160),roll=Math.random();
+  const x=st.nextObsX,diff=Math.min(1,st.score/160),roll=gR();
   const gap=Math.max(145,rnd(168,192)-diff*25);
   const tree=(maxTop)=>{const r=rnd(42,62);let h=rnd(90,190+diff*150);h=Math.min(h,maxTop-GROUND-r*1.55);return mkTree(x,Math.max(60,h),r)};
-  const coin=(cx,cy,p)=>{if(Math.random()<p)st.coins.push({x:cx,y:clamp(cy,GROUND+45,TOP-30),ph:rnd(0,6)})};
+  const coin=(cx,cy,p)=>{if(gR()<p)st.coins.push({x:cx,y:clamp(cy,GROUND+45,TOP-30),ph:rnd(0,6)})};
   if(roll<0.30){const t=tree(GT-170);st.obs.push(t);coin(x,t.crownTop+38,0.75)}
   else if(roll<0.48){const b=mkBird(x+rnd(0,60),rnd(GROUND+120,GT-60),rnd(30,70+diff*50),rnd(0,15+diff*35));st.obs.push(b);
-    coin(b.x0-b.vx*1.5,b.y0+(Math.random()<0.5?1:-1)*(b.amp+52),0.6)}
+    coin(b.x0-b.vx*1.5,b.y0+(gR()<0.5?1:-1)*(b.amp+52),0.6)}
   else if(roll<0.62){const r=rnd(38,48),bl=mkBalloon(x,rnd(GROUND+220,GT-r),r);st.obs.push(bl);coin(x,bl.y0-r-80,0.6)}
   else if(roll<0.82){
     const t=tree(GT-gap-60);st.obs.push(t);
@@ -546,19 +560,19 @@ function genPattern(){
   }
   const step=rnd(3.2*L,4.7*L)-diff*0.8*L;
   coin(x+step/2,st.py>220?st.py+rnd(-200,250):rnd(GROUND+80,FITTOP-80),0.4);
-  if(st.score>3&&Math.random()<0.17+bonus('pup')){const W={shield:17,magnet:13,rocket:12,double:15,coinrain:13,wide:12,zeit:10,anchor:8};let q=Math.random()*100,kind='shield';for(const k in W){q-=W[k];if(q<0){kind=k;break}}
+  if(st.score>3&&gR()<0.17+bonus('pup')){const W={shield:17,magnet:13,rocket:12,double:15,coinrain:13,wide:12,zeit:10,anchor:8};let q=gR()*100,kind='shield';for(const k in W){q-=W[k];if(q<0){kind=k;break}}
     const py=st.py>Math.min(TOP,FITTOP)-100?rnd(Math.max(GROUND+90,st.py-200),Math.min(TOP-60,st.py+200)):rnd(GROUND+90,Math.min(TOP,FITTOP)-90);
     st.pups.push({x:x+step*0.55,y:py,kind,ph:rnd(0,6)})}
-  if(st.py>220||Math.random()<0.3){
+  if(st.py>220||gR()<0.3){
     const n=st.py>220?2:1;
     for(let j=0;j<n;j++){
-      if(st.py>220&&Math.random()<0.25)continue;
+      if(st.py>220&&gR()<0.25)continue;
       const hy=rnd(Math.max(430,st.py-260),Math.max(560,st.py+460)),hx=x+rnd(-40,120)+j*120;
       if(hy<950){
-        if(Math.random()<0.5)st.obs.push(mkZep(hx,hy));
+        if(gR()<0.5)st.obs.push(mkZep(hx,hy));
         else for(let i=0;i<3;i++){const g=mkBird(hx+i*34,hy+(i===0?0:i===1?-18:18),6,rnd(20,45));g.goose=true;g.r=16;g.ph=i;st.obs.push(g)}
-      } else if(hy<1350){if(Math.random()<0.35)st.obs.push(mkUfo(hx,hy));else{const r=rnd(36,46);st.obs.push(mkBalloon(hx,hy,r))}}
-      else{const q=Math.random();
+      } else if(hy<1350){if(gR()<0.35)st.obs.push(mkUfo(hx,hy));else{const r=rnd(36,46);st.obs.push(mkBalloon(hx,hy,r))}}
+      else{const q=gR();
         if(q<0.28)st.obs.push(mkAst(hx,hy));else if(q<0.45)st.obs.push(mkSat(hx,hy));else if(q<0.65)st.obs.push(mkUfo(hx,hy));
         else if(q<0.82||hy<1500)st.obs.push(mkAlien(hx,hy));else st.obs.push(mkBH(hx,hy));}
       coin(hx+rnd(-60,60),hy+rnd(-70,70),0.75);
@@ -622,11 +636,12 @@ function isoWeek(d){d=d||new Date();const t=new Date(Date.UTC(d.getFullYear(),d.
   const y=t.getUTCFullYear(),w=Math.ceil(((t-Date.UTC(y,0,1))/86400000+1)/7);return {y,w,key:y+'-W'+w}}
 const obKey=()=>'ob_'+isoWeek().key+'_'+group;
 function submitOnline(score){if(CG_BUILD)return;
-  if(score<=0||!pname||st.diff==='easy'||score<=LS.get(obKey(),0))return;
-  const body={n:pname,s:score,t:{'.sv':'timestamp'},w:isoWeek().key,d:st.diff};if(group)body.g=group;
+  const dly=st.mode==='daily',key=dly?'od_'+dayKey():obKey();
+  if(score<=0||!pname||st.diff==='easy'||score<=LS.get(key,0))return;
+  const body={n:pname,s:score,t:{'.sv':'timestamp'},w:dly?'D-'+dayKey():isoWeek().key,d:st.diff};if(group)body.g=group;
   resolveDB().then(db=>{if(!db)return;
   fetch(db+'/scores.json',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
-    .then(r=>{if(r.ok)LS.set(obKey(),score)}).catch(()=>{});});
+    .then(r=>{if(r.ok)LS.set(key,score)}).catch(()=>{});});
 }
 function loadOnline(){
   const L=$('lbList'),N=$('lbNote');N.textContent='';
@@ -635,32 +650,33 @@ function loadOnline(){
   if(!db){L.innerHTML='<div style="padding:14px;opacity:.8">Keine Verbindung zur Online-Liste. (In der Claude-Vorschau blockiert – öffne nrplk.github.io/drehbruecke.)</div>';return}
   L.innerHTML='<div style="padding:14px;opacity:.8">Lade …</div>';
   fetch(db+'/scores.json?orderBy=%22s%22&limitToLast=600').then(r=>r.json()).then(d=>{
-    const wk=isoWeek().key,useG=lbSub==='grp'&&group;
+    const wk=lbTab==='daily'?'D-'+dayKey():isoWeek().key,useG=lbSub==='grp'&&group;
     const best={};Object.values(d||{}).forEach(e=>{if(e&&typeof e.s==='number'&&typeof e.n==='string'&&e.w===wk&&(!useG||e.g===group)){const k=e.n.toLowerCase();if(!best[k]||e.s>best[k].s)best[k]=e}});
     const arr=Object.values(best).sort((a,b)=>b.s-a.s).slice(0,20),M=['🥇','🥈','🥉'];
-    if(!arr.length){L.innerHTML='<div style="padding:14px;opacity:.8">Diese Woche noch niemand'+(useG?' in deiner Gruppe':'')+' – sei der Erste!</div>';return}
+    if(!arr.length){L.innerHTML='<div style="padding:14px;opacity:.8">'+(lbTab==='daily'?'Heute noch niemand':'Diese Woche noch niemand')+''+(useG?' in deiner Gruppe':'')+' – sei der Erste!</div>';return}
     L.innerHTML=arr.map((e,i)=>'<div class="r'+(pname&&e.n.toLowerCase()===pname.toLowerCase()?' me':'')+'"><span class="p">'+(M[i]||(i+1))+'</span><span class="n"></span><span class="s">'+e.s+'</span><span class="d">'+(e.t?new Date(e.t).toLocaleDateString('de-AT',{day:'2-digit',month:'2-digit'}):'')+'</span></div>').join('');
     [...L.querySelectorAll('.n')].forEach((el,i)=>el.textContent=(arr[i].d==='hard'?'🔴 ':'🟡 ')+arr[i].n);
-    N.textContent=!pname?'Gib im Menü deinen Namen ein, damit du hier auftauchst.':'Neue Liste jeden Montag · nur Klassisch auf 🟡 Normal oder 🔴 Schwer';
+    N.textContent=!pname?'Gib im Menü deinen Namen ein, damit du hier auftauchst.':(lbTab==='daily'?'📅 Tages-Challenge · neue Strecke jeden Tag':'Neue Liste jeden Montag · nur Klassisch auf 🟡 Normal oder 🔴 Schwer')+' · zählt nur bis zum ersten Absturz (ohne Video)';
   }).catch(()=>{L.innerHTML='<div style="padding:14px;opacity:.8">Keine Verbindung zur Online-Liste. (Funktioniert in der Web-Version bzw. HTML-Datei mit Internet.)</div>'});
   });
 }
-function setTab(t){lbTab=t;$('tabLocal').classList.toggle('on',t==='local');$('tabOnline').classList.toggle('on',t==='online');
-  const wk=isoWeek();$('wkLabel').textContent='🗓 Kalenderwoche '+wk.w+' / '+wk.y;$('wkLabel').classList.toggle('hidden',t!=='online');
-  $('onlineSub').classList.toggle('hidden',t!=='online'||!group);$('subGrp').textContent='👥 '+(group||'Gruppe');
+function setTab(t){lbTab=t;$('tabLocal').classList.toggle('on',t==='local');$('tabOnline').classList.toggle('on',t==='online');$('tabDaily').classList.toggle('on',t==='daily');
+  const wk=isoWeek();$('wkLabel').textContent=t==='daily'?'📅 Heute, '+new Date().toLocaleDateString('de-AT'):'🗓 Kalenderwoche '+wk.w+' / '+wk.y;$('wkLabel').classList.toggle('hidden',t==='local');
+  $('onlineSub').classList.toggle('hidden',t==='local'||!group);$('subGrp').textContent='👥 '+(group||'Gruppe');
   if(!group)lbSub='all';$('subAll').classList.toggle('on',lbSub==='all');$('subGrp').classList.toggle('on',lbSub==='grp');
   if(t==='local'){renderBoard();$('lbNote').textContent=''}else loadOnline()}
 let board=LS.get('board',[]),pname=LS.get('name',''),lastEntry=null;
 function addToBoard(score){
   if(score<=0)return 0;
-  const e={n:pname||'Spieler',k:st.diff||'normal',s:score,d:new Date().toLocaleDateString('de-AT',{day:'2-digit',month:'2-digit'}),id:Date.now()};
+  if(st.boardId)board=board.filter(x=>x.id!==st.boardId);
+  const e={n:pname||'Spieler',k:st.diff||'normal',s:score,v:st.revives||0,d:new Date().toLocaleDateString('de-AT',{day:'2-digit',month:'2-digit'}),id:st.boardId||Date.now()};st.boardId=e.id;
   board.push(e);board.sort((a,b)=>b.s-a.s);board=board.slice(0,10);LS.set('board',board);
   const i=board.findIndex(x=>x.id===e.id);lastEntry=i>=0?e.id:null;return i+1;
 }
 function renderBoard(){
   const M=['🥇','🥈','🥉'];
   $('lbList').innerHTML=board.length?board.map((e,i)=>'<div class="r'+(e.id===lastEntry?' me':'')+'"><span class="p">'+(M[i]||(i+1))+'</span><span class="n"></span><span class="s">'+e.s+'</span><span class="d">'+e.d+'</span></div>').join(''):'<div style="padding:14px;opacity:.75">Noch keine Runden – leg los!</div>';
-  [...$('lbList').querySelectorAll('.n')].forEach((el,i)=>el.textContent=(DIFF[board[i].k]||DIFF.normal).i+' '+board[i].n);
+  [...$('lbList').querySelectorAll('.n')].forEach((el,i)=>el.textContent=(DIFF[board[i].k]||DIFF.normal).i+' '+board[i].n+(board[i].v?' 📺':''));
 }
 let boardFrom='menu';
 function openBoard(from){boardFrom=from;$(from).classList.add('hidden');$('board').classList.remove('hidden');setTab(lbTab);sfx.click()}
@@ -729,7 +745,7 @@ function collectPup(p){
   else{st.topBoost++;TOP=FITTOP+st.topBoost*80;stat('boosts',1)}
   st.banner={text:d.i+' '+d.n+'!',t:0};ring(p.x,p.y,d.c,120);
   [784,988,1175,1568].forEach((f,i)=>tone(f,0.15,'triangle',0.13,0,i*0.05));vib([20,30,20]);
-  for(let i=0;i<16;i++)st.parts.push({x:p.x,y:p.y,vx:rnd(-160,160),vy:rnd(-60,200),t:0,col:d.c});
+  for(let i=0;i<16;i++)st.parts.push({x:p.x,y:p.y,vx:vrnd(-160,160),vy:vrnd(-60,200),t:0,col:d.c});
 }
 
 // ---------- juice ----------
@@ -743,11 +759,41 @@ const xpNeed=l=>80+l*40;
 function lvlHTML(gain){const n=xpNeed(level),p=Math.min(100,xp/n*100);
   return '<div class="lt"><span>⭐ Level '+level+'</span><span>'+(gain?'<span style="color:#2e7d32">+'+gain+' XP</span> · ':'')+xp+'/'+n+' XP</span></div><div class="bar"><i style="width:'+p+'%"></i></div>'}
 function addXP(n){
+  passCheck();pass.xp+=n;LS.set('pass',pass);
   xp+=n;let ups=0;
   while(xp>=xpNeed(level)){xp-=xpNeed(level);level++;ups++;const rw=15+level*5;coins+=rw;
     setTimeout(()=>{toast('⭐ Level '+level+' erreicht!  +'+rw+' 🪙');sfx.record()},700*ups)}
   LS.set('xp',xp);LS.set('level',level);LS.set('coins',coins);stat('level',level,true);
 }
+// ---------- season pass ----------
+const PASS_N=30,PASS_XP=150,PASS_IT=['shield','double','magnet','rocket','revive'];
+const seasonKey=()=>{const d=new Date();return d.getFullYear()+'-'+(d.getMonth()+1)};
+let pass=LS.get('pass',{k:'',xp:0,cl:[]});
+function passCheck(){if(pass.k!==seasonKey()){pass={k:seasonKey(),xp:0,cl:[]};LS.set('pass',pass)}}
+function passTier(){passCheck();return Math.min(PASS_N,Math.floor(pass.xp/PASS_XP))}
+function passRew(i){if(i===PASS_N)return {t:'skin',i:'👑',n:'Skin „Saison-Krone“'};
+  if(i%10===0)return {t:'chest',v:i===10?2:3,i:CHESTS[i===10?2:3].i,n:CHESTS[i===10?2:3].n};
+  if(i%5===0){const it=ITEMS.find(x=>x.id===PASS_IT[(i/5-1)%5]);return {t:'item',v:it.id,i:it.i,n:it.n}}
+  if(i%3===0)return {t:'chest',v:1,i:CHESTS[1].i,n:CHESTS[1].n};
+  const c=15+i*3;return {t:'coin',v:c,i:'🪙',n:c+' Münzen'}}
+function passOpen(){passCheck();return [...Array(passTier())].filter((_,i)=>!pass.cl.includes(i+1)).length}
+function renderPassBadge(){const n=passOpen(),b=$('passBadge');b.textContent=n;b.classList.toggle('on',n>0)}
+function renderPass(){
+  const t=passTier(),d=new Date(),end=new Date(d.getFullYear(),d.getMonth()+1,1),left=Math.ceil((end-d)/864e5);
+  const into=t>=PASS_N?PASS_XP:pass.xp-t*PASS_XP;
+  $('passHead').innerHTML='<div class="lt"><span>🎫 Stufe '+t+' / '+PASS_N+'</span><span>'+(t>=PASS_N?'Fertig! 🎉':into+'/'+PASS_XP+' XP')+'</span></div><div class="bar"><i style="width:'+(into/PASS_XP*100)+'%"></i></div><div class="muted" style="font-size:12px;margin-top:4px">Saison endet in '+left+' Tagen · XP aus jeder Runde zählen</div>';
+  const L=$('passList');L.innerHTML='';
+  for(let i=1;i<=PASS_N;i++){const r=passRew(i),got=pass.cl.includes(i),can=i<=t&&!got,el=document.createElement('div');
+    el.className='card upg'+(got?' max':'')+(!can&&!got?' poor':'');
+    el.innerHTML='<span class="ic">'+r.i+'</span><span class="tx"><b>Stufe '+i+'</b><small>'+r.n+'</small></span><span class="bt">'+(got?'✓':can?'Abholen':'🔒')+'</span>';
+    el.onclick=()=>{if(!can){sfx.click();return}claimPass(i)};L.appendChild(el)}
+}
+function claimPass(i){const r=passRew(i);pass.cl.push(i);LS.set('pass',pass);
+  if(r.t==='coin'){coins+=r.v;LS.set('coins',coins);sfx.coin();toast('🪙 +'+r.v)}
+  else if(r.t==='item'){items[r.v]=Math.min(5,(items[r.v]||0)+1);LS.set('items',items);sfx.record();toast(r.i+' '+r.n+' im Rucksack!')}
+  else if(r.t==='skin'){if(!owned.includes('crown')){owned.push('crown');LS.set('owned',owned)}sfx.record();vib([30,40,60]);toast('👑 Saison-Krone freigeschaltet!')}
+  else if(r.t==='chest'){$('passOv').classList.add('hidden');chestTier=r.v;openChest('passOv');renderPass();renderPassBadge();return}
+  renderPass();renderPassBadge()}
 // ---------- chest ----------
 let chestReady=false,chestTier=0,lastRar=null;
 const CHESTS=[null,{n:'Holztruhe',i:'📦',skin:0.5,w:{c:50,r:35,e:12,l:3,m:0}},{n:'Silbertruhe',i:'🎁',skin:0.65,w:{c:20,r:40,e:28,l:10,m:2}},{n:'Goldtruhe',i:'👑',skin:0.8,w:{c:0,r:25,e:40,l:27,m:8}}];
@@ -757,7 +803,7 @@ function rollChest(){
   const C=CHESTS[chestTier];lastRar=null;
   if(Math.random()<C.skin){
     const rar=pickRar(C.w);lastRar=rar;
-    const pool=SKINS.filter(k=>k.rar===rar&&!k.admin&&!owned.includes(k.id));
+    const pool=SKINS.filter(k=>k.rar===rar&&!k.admin&&!k.pass&&!owned.includes(k.id));
     if(!pool.length){const c=DUP[rar];coins+=c;LS.set('coins',coins);return '🪙 '+c+' Münzen (alle '+RAR[rar].n+'-Skins schon da)'}
     const k=pool[Math.floor(Math.random()*pool.length)];owned.push(k.id);LS.set('owned',owned);return '✨ '+RAR[rar].n+': '+k.name+'!';
   }
@@ -985,7 +1031,7 @@ function drawBoss(o){
       ctx.fillStyle='#fbbf24';ctx.beginPath();ctx.moveTo(x-r*0.4,y-r*0.85);ctx.lineTo(x,y-r*1.35);ctx.lineTo(x+r*0.4,y-r*0.85);ctx.fill();
       if(i===0){dot(x-r*0.35,y-r*0.2,r*0.22,'#fff');dot(x-r*0.4,y-r*0.2,r*0.11,'#111');
         ctx.fillStyle='#fde68a';ctx.beginPath();ctx.moveTo(x-r*0.2,y-r*0.8);ctx.lineTo(x+r*0.2,y-r*1.6);ctx.lineTo(x+r*0.4,y-r*0.7);ctx.fill();
-        if(Math.sin(st.t*3)>0.6){ctx.fillStyle='rgba(255,140,0,0.8)';ctx.beginPath();ctx.moveTo(x-r,y+r*0.2);ctx.lineTo(x-r*3.2,y-r*0.3+Math.random()*r*0.4);ctx.lineTo(x-r*3.2,y+r*0.8);ctx.fill()}}}
+        if(Math.sin(st.t*3)>0.6){ctx.fillStyle='rgba(255,140,0,0.8)';ctx.beginPath();ctx.moveTo(x-r,y+r*0.2);ctx.lineTo(x-r*3.2,y-r*0.3+gR()*r*0.4);ctx.lineTo(x-r*3.2,y+r*0.8);ctx.fill()}}}
   } else {
     const p=P2[2],x=sx(p.x),y=sy(p.y),s=S*2.6;
     ctx.save();ctx.globalAlpha=0.16;ctx.fillStyle='#a5f3fc';ctx.beginPath();ctx.moveTo(x-20*s,y+8*s);ctx.lineTo(x+20*s,y+8*s);ctx.lineTo(x+55*s,y+90*s);ctx.lineTo(x-55*s,y+90*s);ctx.fill();ctx.restore();
@@ -996,10 +1042,10 @@ function drawBoss(o){
 }
 function triggerEvent(){
   if(st.py>1100){
-    if(Math.random()<0.5){for(let i=0;i<4;i++)st.obs.push(mkAst(st.px+260+i*rnd(70,110),st.py+rnd(-160,200)));st.banner={text:'☄️ METEORSCHAUER!',t:0};noise(1,0.3,300)}
+    if(gR()<0.5){for(let i=0;i<4;i++)st.obs.push(mkAst(st.px+260+i*rnd(70,110),st.py+rnd(-160,200)));st.banner={text:'☄️ METEORSCHAUER!',t:0};noise(1,0.3,300)}
     else{for(let i=0;i<2;i++)st.obs.push(mkUfo(st.px+300+i*200,st.py+rnd(-120,160)));st.banner={text:'👽 UFO-ANGRIFF!',t:0};[880,660,880,660].forEach((f,i)=>tone(f,0.12,'square',0.05,0,i*0.13))}
     return}
-  if(st.lastEv!=='storm'&&Math.random()<0.4){
+  if(st.lastEv!=='storm'&&gR()<0.4){
     st.lastEv='storm';st.storm=4.5;st.banner={text:'🌪 STURM!',t:0};noise(1.2,0.25,400);vib([60,40,60]);
   } else {
     st.lastEv='eagle';const b=mkBird(st.px+760,clamp(st.py+rnd(-30,60),GROUND+90,TOP-70),14,200);b.big=true;b.r=34;st.obs.push(b);
@@ -1106,7 +1152,7 @@ function tap(){
   if(st.py>TOP-130){if(!st.warned){st.warned=true;tone(880,0.12,'square',0.08);tone(880,0.12,'square',0.08,0,0.18);vib([30,60,30])}}
   else st.warned=false;
   st.omega=omegaFor(st.score);
-  if(st.score>=15&&Math.random()<0.4)st.dir*=-1;
+  if(st.score>=15&&gR()<0.4)st.dir*=-1;
   mission('score60',st.score,true);
   if(st.tut){
     st.tut++;st.omega=2.4;st.dir=-1;
@@ -1129,7 +1175,7 @@ function collapse(seg,reason){
     st.anchors=st.anchors.filter(a=>a.idx<=an.idx)}
   const n=all.length;
   st.falling=all.map((s,i)=>({len:Math.hypot(s.x2-s.x1,s.y2-s.y1),cx:(s.x1+s.x2)/2,cy:(s.y1+s.y2)/2,ang:Math.atan2(s.y2-s.y1,s.x2-s.x1),
-    vx:rnd(-40,40),vy:rnd(0,60),va:rnd(-4,4),delay:Math.min(1,(n-1-i)*0.05),bad:i===n-1,rest:false}));
+    vx:vrnd(-40,40),vy:vrnd(0,60),va:vrnd(-4,4),delay:Math.min(1,(n-1-i)*0.05),bad:i===n-1,rest:false}));
   st.segs=keep;st.fallT=0;
 }
 
@@ -1142,26 +1188,28 @@ function showOver(){
   if(st.mode==='rush'){const adm=isAdmin(),rb=LS.get('rushBest',0),rec=!adm&&st.score>rb;if(rec)LS.set('rushBest',st.score);
     $('overReason').textContent=adm?'🛠 Admin-Runde':rec&&rb>0?'🏆 Neuer Rush-Rekord!':st.reason;$('overScore').textContent=st.score;
     $('overBest').textContent='⏱ Rush-Rekord: '+Math.max(rb,adm?0:st.score);$('overRank').textContent='';
-    $('overCoins').textContent='🪙 +'+st.coinsRun+'  ·  gesamt '+coins;$('btnRevive').classList.add('hidden');renderMissions('missionsO');
+    $('overCoins').textContent='🪙 +'+st.coinsRun+'  ·  gesamt '+coins;$('btnRevive').classList.add('hidden');renderMissions('missionsO');setDbl();
     const gain=adm?0:Math.round((st.score+st.coinsRun*2)*(DIFF[st.diff]||DIFF.normal).xp*(1+bonus('xp')));if(gain)addXP(gain);$('lvlO').innerHTML=lvlHTML(gain);$('btnChest').classList.add('hidden');
     $('over').classList.remove('hidden');updHud();return}
-  const adm=isAdmin(),prev=best,isRec=!adm&&st.score>best;
-  if(isRec){best=st.score;LS.set('best',best)}
+  const adm=isAdmin(),dly=st.mode==='daily',dbk='dayBest_'+dayKey(),prev=dly?LS.get(dbk,0):best,isRec=!adm&&st.score>prev;
+  if(isRec){if(dly)LS.set(dbk,st.score);else{best=st.score;LS.set('best',best)}}
   if(st.px>bestDist){bestDist=st.px;LS.set('bestDist',bestDist)}
   $('overReason').textContent=isRec&&prev>0?'🏆 Neuer Rekord!':st.reason;if(isRec&&prev>0)cg(S=>S.game.happytime());
   $('overScore').textContent=st.score;
   const miss=prev-st.score;
-  $('overBest').textContent=isRec?'Bestwert: '+best:(prev>0&&miss<=10?'Nur '+(miss+1)+(miss===0?' Punkt':' Punkte')+' bis zum Rekord! ('+best+')':'Bestwert: '+best);
+  const bv=Math.max(prev,adm?0:st.score),bl=dly?'📅 Heute bester: ':'Bestwert: ';
+  $('overBest').textContent=isRec?bl+bv:(prev>0&&miss<=10?'Nur '+(miss+1)+(miss===0?' Punkt':' Punkte')+' bis zum Rekord! ('+bv+')':bl+bv);
   $('overCoins').textContent='🪙 +'+st.coinsRun+'  ·  gesamt '+coins;
   $('btnRevive').classList.remove('hidden');$('btnRevive').textContent=st.extraLife?'💖 Extra-Leben benutzen':'▶ Video ansehen & weiterspielen';
-  renderMissions('missionsO');
-  const rk=adm?0:addToBoard(st.score);if(!adm)submitOnline(st.score);
+  renderMissions('missionsO');setDbl();
+  const clean=st.revives?st.clean:st.score;
+  const rk=adm||dly?0:addToBoard(st.score);if(!adm)submitOnline(clean);
   if(adm)$('overReason').textContent='🛠 Admin-Runde – zählt nicht für die Bestenliste';
-  const gain=adm?0:Math.round((st.score+st.coinsRun*2)*(DIFF[st.diff]||DIFF.normal).xp*(1+bonus('xp')));if(gain)addXP(gain);$('lvlO').innerHTML=lvlHTML(gain);
-  chestTier=adm?0:st.score>=300?3:st.score>=200?2:st.score>=100?1:0;chestReady=chestTier>0;
+  const gT=adm?0:Math.round((st.score+st.coinsRun*2)*(DIFF[st.diff]||DIFF.normal).xp*(1+bonus('xp'))),gain=Math.max(0,gT-(st.xpGiven||0));st.xpGiven=Math.max(st.xpGiven||0,gT);if(gain)addXP(gain);$('lvlO').innerHTML=lvlHTML(gain);
+  const ct=adm?0:st.score>=300?3:st.score>=200?2:st.score>=100?1:0;chestTier=ct>(st.chestGot||0)?ct:0;if(chestTier)st.chestGot=ct;chestReady=chestTier>0;
   if(chestReady)$('btnChest').textContent=CHESTS[chestTier].i+' '+CHESTS[chestTier].n+' öffnen!';
   $('btnChest').classList.toggle('hidden',!chestReady);
-  $('overRank').textContent=rk===1&&board.length>1?'🥇 Platz 1 auf der Bestenliste!':rk>0&&rk<=10&&board.length>1?'🏆 Platz '+rk+' auf der Bestenliste':'';
+  $('overRank').textContent=(rk===1&&board.length>1?'🥇 Platz 1 auf der Bestenliste!':rk>0&&rk<=10&&board.length>1?'🏆 Platz '+rk+' auf der Bestenliste':'')+(st.revives&&!adm?'  🌍 Online zählt: '+clean+' (ohne Video)':'');
   $('over').classList.remove('hidden');
   updHud();
 }
@@ -1184,34 +1232,42 @@ function cgAd(type,onDone,onFail){
   }));
 }
 function doRevive(){
+      if(!st.revives)st.clean=st.score;
       const b=st.backup;st.segs=b.segs;st.px=b.px;st.py=b.py;st.a=Math.PI;st.combo=0;
       st.obs=st.obs.filter(o=>{const x=o.type==='bird'?birdPos(o,st.t).x:o.cx;return x>st.px+320||x<st.px-80});
       if(st.nextObsX<st.px+320)st.nextObsX=st.px+320;
       st.falling=[];st.revived=true;st.revives=(st.revives||0)+1;st.phase='play';st.logged=false;st.startedAt=performance.now();updHud();cg(S=>S.game.gameplayStart());
 }
+function watchAd(done){
+  $('over').classList.add('hidden');
+  if(CG_BUILD&&CG){cgAd('rewarded',done,()=>{$('over').classList.remove('hidden');toast('Gerade keine Werbung verfügbar – versuch es später.')});return}
+  $('ad').classList.remove('hidden');
+  let n=5;$('adCount').textContent=n;
+  const iv=setInterval(()=>{n--;$('adCount').textContent=n;if(n<=0){clearInterval(iv);$('ad').classList.add('hidden');done()}},1000);
+}
 function revive(){
   if(st.extraLife){st.extraLife=false;$('over').classList.add('hidden');doRevive();toast('💖 Extra-Leben benutzt!');return}
-  if(CG_BUILD&&CG){$('over').classList.add('hidden');
-    cgAd('rewarded',()=>doRevive(),()=>{$('over').classList.remove('hidden');toast('Gerade keine Werbung verfügbar – versuch es später.')});return}
-  $('over').classList.add('hidden');$('ad').classList.remove('hidden');
-  let n=5;$('adCount').textContent=n;
-  const iv=setInterval(()=>{n--;$('adCount').textContent=n;if(n<=0){clearInterval(iv);$('ad').classList.add('hidden');doRevive()}},1000);
+  watchAd(doRevive);
 }
+function setDbl(){const b=$('btnDbl');const ok=!isAdmin()&&!st.dblDone&&st.coinsRun>=3&&st.mode!=='zen';b.classList.toggle('hidden',!ok);if(ok)b.textContent='📺 Münzen verdoppeln (+'+st.coinsRun+' 🪙)'}
+function doubleCoins(){watchAd(()=>{const c=st.coinsRun;coins+=c;st.coinsRun+=c;st.dblDone=true;LS.set('coins',coins);
+  $('overCoins').textContent='🪙 +'+st.coinsRun+'  ·  gesamt '+coins;setDbl();$('over').classList.remove('hidden');st.overAt=performance.now();sfx.record();toast('🪙 +'+c+' Münzen!');vib([30,40,60])})}
 
 function start(){
   cg(S=>S.game.gameplayStart());
   audio();MUS.on=true;
-  applySkinTop();newGame('play');
+  gR=mode==='daily'?seedRng(daySeed()):Math.random;applySkinTop();newGame('play');
   mission('runs',1);stat('runs',1);saveStats();
   st.startedAt=performance.now();
-  st.mode=mode;st.diff=diff;st.nextBoss=120;st.omega=omegaFor(0);
+  st.mode=mode;st.diff=mode==='daily'?'normal':diff;st.nextBoss=120;
+  st.omega=omegaFor(0);
   if(!LS.get('tut',false)&&mode==='classic'){st.tut=1;st.nextObsX=1e9;st.omega=2.4}
   if(mode==='zen'){st.nextObsX=1e12;st.omega=3}
   if(mode==='rush'){st.timeLeft=60}
   $('timer').classList.toggle('hidden',mode!=='rush');
   if(LS.get('nextShield',false)){st.shield=true;LS.set('nextShield',false);setTimeout(()=>toast('🛡 Truhen-Schild aktiv!'),300)}
-  if(bonus('shield')>=1||Math.random()<bonus('shieldp'))st.shield=true;
-  if(mode!=='zen'&&!isAdmin()){const used=[];
+  if(mode!=='daily'&&(bonus('shield')>=1||Math.random()<bonus('shieldp')))st.shield=true;
+  if(mode!=='zen'&&mode!=='daily'&&!isAdmin()){const used=[];
     const use=id=>{if((items[id]||0)>0){items[id]--;used.push(ITEMS.find(x=>x.id===id).i);return true}return false};
     if(use('shield'))st.shield=true;if(use('double'))st.buffs.double=15;if(use('magnet'))st.buffs.magnet=20;if(use('rocket'))st.rocket={n:6,t:0.8};if(use('revive'))st.extraLife=true;
     LS.set('items',items);if(used.length)setTimeout(()=>toast('🎒 Items aktiv: '+used.join(' ')),350)}
@@ -1255,11 +1311,11 @@ function renderShop(){
   for(const k of SKINS.slice().sort((a,b)=>RO.indexOf(a.rar)-RO.indexOf(b.rar)||(a.chest?1e4:a.price||0)-(b.chest?1e4:b.price||0))){
     if(k.admin&&(pname||'').toLowerCase()!=='admin')continue;
     const own=owned.includes(k.id)||(k.admin),sel=skinId===k.id,d=document.createElement('div');
-    const lvLock=!own&&k.lvl&&level<k.lvl,chestOnly=!own&&k.chest;
+    const lvLock=!own&&k.lvl&&level<k.lvl,chestOnly=!own&&(k.chest||k.pass);
     d.className='card'+(sel?' sel':'')+(own?'':' locked')+(!own&&(lvLock||chestOnly||coins<k.price)?' poor':'');
     if(!sel)d.style.borderColor=RAR[k.rar].col;
     const ab=k.admin?'unzerstörbar · zählt nicht':perkText(k.id)||'<span style="color:#6b4a2a;font-weight:600">keine Fähigkeit</span>';
-    d.innerHTML='<div class="rar" style="background:'+RAR[k.rar].col+'">'+RAR[k.rar].n+'</div><div class="sw" style="background:'+swatch(k)+'"></div><div class="nm">'+k.name+'</div><div class="ab">'+ab+'</div><div class="pr">'+(sel?'✓ Gewählt':own?'Wählen':chestOnly?'🎁 nur aus Truhen':lvLock?'🔒 ab Level '+k.lvl:'🪙 '+k.price)+'</div>';
+    d.innerHTML='<div class="rar" style="background:'+RAR[k.rar].col+'">'+RAR[k.rar].n+'</div><div class="sw" style="background:'+swatch(k)+'"></div><div class="nm">'+k.name+'</div><div class="ab">'+ab+'</div><div class="pr">'+(sel?'✓ Gewählt':own?'Wählen':chestOnly?(k.pass?'🎫 Saison-Pass Stufe 30':'🎁 nur aus Truhen'):lvLock?'🔒 ab Level '+k.lvl:'🪙 '+k.price)+'</div>';
     d.onclick=()=>{
       if(!own&&(lvLock||chestOnly)){sfx.click();return}
       if(!own){if(coins<k.price){sfx.click();return}coins-=k.price;owned.push(k.id);LS.set('coins',coins);LS.set('owned',owned);sfx.record();stat('bought',1)}
@@ -1277,16 +1333,16 @@ $('btnShopBack').onclick=()=>{$('shop').classList.add('hidden');$(shopFrom).clas
   if(shopFrom==='menu')$('menuCoins').textContent='🪙 '+coins;else $('overCoins').textContent='🪙 +'+st.coinsRun+'  ·  gesamt '+coins}
 $('over').addEventListener('pointerdown',e=>{if(e.target.closest('button'))return;if(performance.now()-(st.overAt||0)<700)return;start()});
 $('mute').onclick=e=>{e.stopPropagation();muted=!muted;LS.set('muted',muted);audio();updHud()};
-$('btnStart').onclick=start;$('btnRevive').onclick=e=>{e.stopPropagation();audio();revive()};
+$('btnStart').onclick=start;$('btnDbl').onclick=e=>{e.stopPropagation();audio();doubleCoins()};$('btnRevive').onclick=e=>{e.stopPropagation();audio();revive()};
 $('menuBest').textContent=best?'Bestwert: '+best:'';
 $('menuCoins').textContent='🪙 '+coins;
 renderMissions('missionsM');renderMissBadge&&renderMissBadge();
 $('nameIn').value=pname;
 $('groupIn').value=group;
 $('groupIn').addEventListener('input',e=>{group=e.target.value.toLowerCase().replace(/[^a-z0-9äöü_-]/g,'').slice(0,16);e.target.value=group;LS.set('group',group)});
-const MODEINFO={classic:'Endlos bauen, so weit du kommst. Zählt für die Online-Bestenliste.',rush:'60 Sekunden – so viele Punkte wie möglich. Fehler kosten 5 Sekunden.',zen:'Keine Hindernisse, kein Einsturz. Einfach entspannt bauen.'};
-function renderChip(){const M={classic:'🌉 Klassisch',rush:'⏱ Zeit-Rush',zen:'🧘 Zen'},D={easy:'🟢 Leicht',normal:'🟡 Normal',hard:'🔴 Schwer'};
-  $('btnMode').textContent=M[mode]+(mode==='zen'?'':' · '+D[diff])+'  ▾';$('modeInfo').textContent=MODEINFO[mode]}
+const MODEINFO={classic:'Endlos bauen, so weit du kommst. Zählt für die Online-Bestenliste.',rush:'60 Sekunden – so viele Punkte wie möglich. Fehler kosten 5 Sekunden.',zen:'Keine Hindernisse, kein Einsturz. Einfach entspannt bauen.',daily:'Heute haben alle die gleichen Hindernisse. Ohne Upgrades & Items – nur dein Können zählt. Eigene Tages-Bestenliste!'};
+function renderChip(){const M={classic:'🌉 Klassisch',rush:'⏱ Zeit-Rush',zen:'🧘 Zen',daily:'📅 Tages-Challenge'},D={easy:'🟢 Leicht',normal:'🟡 Normal',hard:'🔴 Schwer'};
+  $('btnMode').textContent=M[mode]+(mode==='zen'||mode==='daily'?'':' · '+D[diff])+'  ▾';$('modeInfo').textContent=MODEINFO[mode]}
 function renderMissBadge(){const open=daily.m.filter(m=>!m.done).length;const b=$('missBadge');b.textContent=open;b.classList.toggle('on',open>0)}
 function renderModes(){[...document.querySelectorAll('#modeTabs .tab')].forEach(b=>b.classList.toggle('on',b.dataset.m===mode));renderChip()}
 function renderDiff(){[...document.querySelectorAll('#diffTabs .tab')].forEach(b=>b.classList.toggle('on',b.dataset.d===diff));if($('btnMode'))renderChip()}
@@ -1301,13 +1357,14 @@ function openSet(from){setFrom=from;$(from).classList.add('hidden');$('setOv').c
 $('btnSet').onclick=()=>{audio();openSet('menu')};
 $('btnWheelM').onclick=openWheel;$('btnSpin').onclick=spin;$('btnWheelBack').onclick=()=>{$('wheelOv').classList.add('hidden');$('menu').classList.remove('hidden');renderWheelBadge()};
 $('btnShare').onclick=e=>{e.stopPropagation();openShare()};$('btnShareNow').onclick=shareNow;$('btnShareBack').onclick=()=>{$('shareOv').classList.add('hidden');$('over').classList.remove('hidden');st.overAt=performance.now()};
-renderWheelBadge();
+renderWheelBadge();renderPassBadge();
+$('btnPassM').onclick=()=>{renderPass();swapOv('menu','passOv')};$('btnPassBack').onclick=()=>{renderPassBadge();swapOv('passOv','menu')};
 if(ADVENT){document.querySelector('.sign .tag').textContent='🎄 Frohe Weihnachten! 🎄';
   if(!owned.includes('xmas')){owned.push('xmas');LS.set('owned',owned);setTimeout(()=>toast('🎄 Advents-Geschenk: Skin „Weihnachten“!'),1200)}}
 if(!CG_BUILD)setTimeout(showLogin,400);
 function applyGfx(){window.__gfxLow=settings.gfx==='low';resize();
   if(window.__gfxLow){Object.defineProperty(ctx,'shadowBlur',{configurable:true,get(){return 0},set(){}})}else{delete ctx.shadowBlur}}
-const I18N=[["📊 Für Bestenliste & Statistik werden dein Name, Spielzeit und Punkte gespeichert – keine anderen Daten.", "📊 Your name, playtime and score are saved for the leaderboard & stats – nothing else."], ["Werden automatisch in deiner nächsten Runde benutzt (Klassisch oder Zeit-Rush).", "Used automatically in your next run (Classic or Time Rush)."], ["Hier läuft später ein echtes Belohnungs-Video (z.&nbsp;B. AdMob Rewarded Ad).", "A real reward video will play here later."], ["Viele Skins haben Fähigkeiten – sie wirken, solange der Skin ausgewählt ist.", "Many skins have abilities – active while the skin is selected."], ["Knapp über dem Boden (Anker-Zone) setzt du Anker – die sichern dich!", "Build just above the ground (anchor zone) to place anchors – they keep you safe!"], ["60 Sekunden – so viele Punkte wie möglich. Fehler kosten 5 Sekunden.", "60 seconds – as many points as possible. Mistakes cost 5 seconds."], ["Tippe, wenn der Balken im GELBEN Bereich ist – dann gibt's PERFEKT!", "Tap when the beam is in the YELLOW zone – that's a PERFECT!"], ["Neue Liste jeden Montag · nur Klassisch auf 🟡 Normal oder 🔴 Schwer", "New list every Monday · Classic on 🟡 Normal or 🔴 Hard only"], ["Endlos bauen, so weit du kommst. Zählt für die Online-Bestenliste.", "Build endlessly, as far as you can. Counts for the online leaderboard."], ["Mit dem gleichen Gruppen-Code seht ihr eure eigene Bestenliste.", "Everyone with the same group code shares their own leaderboard."], ["Super! Je waagrechter, desto mehr Punkte. Zu steil = Einsturz!", "Great! The flatter, the more points. Too steep = collapse!"], ["Keine Hindernisse, kein Einsturz. Einfach entspannt bauen.", "No obstacles, no collapse. Just relax and build."], ["Gib im Menü deinen Namen ein, damit du hier auftauchst.", "Enter your name in the profile to show up here."], ["Gerade keine Werbung verfügbar – versuch es später.", "No ad available right now – try again later."], ["Fast! Warte, bis der Balken im hellen Bereich ist.", "Almost! Wait until the beam is in the bright zone."], ["Komm jeden Tag wieder – die Belohnung wird größer!", "Come back every day – the reward gets bigger!"], ["Dauerhafte Verbesserungen – gelten für alle Skins.", "Permanent upgrades – apply to all skins."], ["Bild lange drücken → „Bild sichern“ oder teilen", "Long-press the image → “Save image” or share"], ["🛠 Admin-Runde – zählt nicht für die Bestenliste", "🛠 Admin run – doesn't count for the leaderboard"], ["Hier läuft später ein echtes Belohnungs-Video", "A real reward video will play here later"], ["🛠 Admin-Skin freigeschaltet (im Skin-Shop)", "🛠 Admin skin unlocked (in the skin shop)"], ["Heute schon gedreht – komm morgen wieder.", "Already spun today – come back tomorrow."], ["Online-Liste ist noch nicht eingerichtet.", "Online list is not set up yet."], ["+6 % Chance auf doppelte Münze pro Stufe", "+6 % chance of double coins per level"], ["🎄 Advents-Geschenk: Skin „Weihnachten“!", "🎄 Advent gift: “Christmas” skin!"], ["+10 % Chance auf Startschild pro Stufe", "+10 % chance to start with a shield per level"], ["+0,5° größere Perfekt-Zone pro Stufe", "+0.5° bigger perfect zone per level"], ["Balken dreht 3 % langsamer pro Stufe", "Beam spins 3 % slower per level"], ["Startet die nächste Runde mit Schild", "Start your next run with a shield"], ["▶ Video ansehen &amp; weiterspielen", "▶ Watch video & continue"], ["Tage in Folge! Komm morgen wieder.", "days in a row! Come back tomorrow."], ["Keine Verbindung zur Online-Liste.", "No connection to the online list."], ["Tippe irgendwo für eine neue Runde", "Tap anywhere for a new round"], ["⚡ Timing – Bereich wird größer!", "⚡ Timing – zone gets bigger!"], ["Vom Schwarzen Loch verschluckt!", "Swallowed by the black hole!"], ["▶ Video ansehen & weiterspielen", "▶ Watch video & continue"], ["Einmal ohne Video weiterspielen", "Continue once without a video"], ["🛡 Schild für die nächste Runde", "🛡 Shield for your next run"], ["🥇 Platz 1 auf der Bestenliste!", "🥇 #1 on the leaderboard!"], ["Raketen-Schub direkt am Anfang", "Rocket boost right at the start"], ["15 s doppelte Punkte zum Start", "15 s double points at the start"], ["🕳 immun gegen Schwarze Löcher", "🕳 immune to black holes"], ["Eine fremde Galaxie erreichen", "Reach an alien galaxy"], ["+2 % mehr Power-ups pro Stufe", "+2 % more power-ups per level"], ["Noch keine Runden – leg los!", "No runs yet – let's go!"], ["Einmal am Tag gratis drehen!", "One free spin every day!"], ["Von einem UFO abgeschossen!", "Shot down by a UFO!"], ["unzerstörbar · zählt nicht", "indestructible · doesn't count"], ["Im Baum hängen geblieben!", "Stuck in a tree!"], ["100 Punkte in einer Runde", "100 points in one run"], ["200 Punkte in einer Runde", "200 points in one run"], ["Die Winter-Welt erreichen", "Reach the winter world"], ["Immun gg. Schwarze Löcher", "Immune to black holes"], ["Diese Woche noch niemand", " Nobody yet this week"], ["Spiele deine erste Runde", "Play your first run"], ["60 Punkte in einer Runde", "60 points in one run"], ["Gruppen-Code (optional)", "Group code (optional)"], ["⚠️ Achtung, Höhenlimit!", "⚠️ Careful, height limit!"], ["Tippen · Drehen · Bauen", "Tap · Spin · Build"], ["🌪 STURM ÜBERSTANDEN +5", "🌪 STORM SURVIVED +5"], ["🛡 Truhen-Schild aktiv!", "🛡 Chest shield active!"], ["⚔️ BOSS: MUTTERSCHIFF!", "⚔️ BOSS: MOTHERSHIP!"], ["🎄 Frohe Weihnachten! 🎄", "🎄 Merry Christmas! 🎄"], ["Einen Sturm überstehen", "Survive a storm"], ["5 Power-ups einsammeln", "Collect 5 power-ups"], ["💖 Extra-Leben benutzt!", "💖 Extra life used!"], ["💖 Extra-Leben benutzen", "💖 Use extra life"], ["✅ Aufgabe erledigt: +", "✅ Task done: +"], ["50× Perfekt insgesamt", "50× Perfect in total"], ["200 Münzen einsammeln", "Collect 200 coins"], ["Bis ins Weltall bauen", "Build up into space"], ["+2 s Magnet pro Stufe", "+2 s magnet per level"], ["20 s Magnet zum Start", "20 s magnet at the start"], [" auf der Bestenliste", " on the leaderboard"], ["🏆 Neuer Rush-Rekord!", "🏆 New Rush record!"], ["🌪 Stürme überstanden", "🌪 Storms survived"], ["Alien erwischt dich!", "An alien got you!"], ["Hindernis getroffen!", "Hit an obstacle!"], ["🏆 BOSS BESIEGT! +15", "🏆 BOSS DEFEATED! +15"], ["🚀 Unendlich weiter!", "🚀 To infinity!"], ["Asteroid getroffen!", "Hit an asteroid!"], ["Vom Adler erwischt!", "Caught by the eagle!"], ["Schaffe 20× Perfekt", "Get 20× Perfect"], ["📋 Tägliche Aufgaben", "📋 Daily Tasks"], ["Niedrig (schneller)", "Low (faster)"], ["⏱ Zeit abgelaufen!", "⏱ Time's up!"], ["🪙 Münzen gesammelt", "🪙 Coins collected"], ["Vom Boss erwischt!", "Caught by the boss!"], ["Combo x6 erreichen", "Reach combo x6"], ["Combo x9 erreichen", "Reach combo x9"], ["Brückenbauer-Profi", "Bridge Pro"], ["Level 10 erreichen", "Reach level 10"], ["30 Minuten spielen", "Play for 30 minutes"], ["Startet mit Schild", "Starts with a shield"], [" – sei der Erste!", " – be the first!"], [" in deiner Gruppe", " in your group"], ["☄️ METEORSCHAUER!", "☄️ METEOR SHOWER!"], ["🎮 Runden gespielt", "🎮 Runs played"], ["📸 Ergebnis teilen", "📸 Share result"], ["Schaffst du mehr?", "Can you beat it?"], ["Falsche Richtung!", "Wrong direction!"], ["Zeppelin gerammt!", "Rammed a zeppelin!"], ["Satellit gerammt!", "Rammed a satellite!"], ["50 Runden spielen", "Play 50 runs"], ["Einen Skin kaufen", "Buy a skin"], ["Erreiche Combo x5", "Reach combo x5"], ["Werbe-Platzhalter", "Ad placeholder"], ["🔗 COMBO GERETTET!", "🔗 COMBO SAVED!"], [" bis zum Rekord!", " to beat your record!"], ["📅 Tages-Bonus: +", "📅 Daily bonus: +"], ["⚔️ BOSS: DRACHE!", "⚔️ BOSS: DRAGON!"], ["🪐 FREMDE GALAXIE", "🪐 ALIEN GALAXY"], ["🗓 Kalenderwoche ", "🗓 Week "], ["🎁 nur aus Truhen", "🎁 chests only"], ["Vogel getroffen!", "Hit a bird!"], ["20× Knapp vorbei", "20 near misses"], ["Sammle 15 Münzen", "Collect 15 coins"], ["-Skins schon da)", " skins already owned)"], ["Zeit pro Spieler", "Time per player"], ["+1,5 s pro Stufe", "+1.5 s per level"], ["Für Bestenliste", "For the leaderboard"], ["⏱ Rush-Rekord: ", "⏱ Rush record: "], ["⚓ Anker gesetzt", "⚓ Anchors placed"], ["⚡ STEILPASS! +2", "⚡ STEEP PASS! +2"], ["🏆 Neuer Rekord!", "🏆 New record!"], ["🌉 Balken gebaut", "🌉 Beams built"], ["🎁 Truhe öffnen!", "🎁 Open chest!"], ["📸 Dein Ergebnis", "📸 Your result"], ["Ballon gerammt!", "Rammed a balloon!"], ["Doppelte Punkte", "Double Points"], ["DOPPELTE PUNKTE", "DOUBLE POINTS"], ["10 Anker setzen", "Place 10 anchors"], ["3× Knapp vorbei", "3 near misses"], ["Spiele 5 Runden", "Play 5 runs"], ["keine Fähigkeit", "no ability"], ["🎒 Items aktiv: ", "🎒 Items active: "], ["👽 UFO-ANGRIFF!", "👽 UFO ATTACK!"], ["🌌 STRATOSPHÄRE", "🌌 STRATOSPHERE"], ["🌌 Stratosphäre", "🌌 Stratosphere"], ["🛡 SCHILD HÄLT!", "🛡 SHIELD HOLDS!"], ["🏆 Bester Score", "🏆 Best score"], ["😬 Knapp vorbei", "😬 Near misses"], ["Boden berührt!", "Hit the ground!"], ["Wintereinbruch", "Winter Is Here"], ["Andere Galaxie", "Another Galaxy"], ["freigeschaltet", "unlocked"], ["Schwarzes Loch", "Black Hole"], ["Power-up-Glück", "Power-up Luck"], ["Punkte-Booster", "Point Booster"], ["📅 Tages-Bonus", "📅 Daily Bonus"], ["⚓ ANKER HÄLT!", "⚓ ANCHOR HOLDS!"], ["⚓ Anker aktiv", "⚓ Anchor active"], ["NEUER REKORD!", "NEW RECORD!"], ["🔥 Beste Combo", "🔥 Best combo"], ["RAKETEN-SCHUB", "ROCKET BOOST"], ["Perfektionist", "Perfectionist"], ["Gut verankert", "Well Anchored"], ["Setze 3 Anker", "Place 3 anchors"], ["Münzen (alle ", "coins (all "], ["Kalenderwoche", "Week"], ["Einstellungen", "Settings"], ["Schwierigkeit", "Difficulty"], ["Partikel-Spur", "Particle trail"], ["Glücks-Schild", "Lucky Shield"], ["Ruhiger Start", "Calm Start"], ["Im Rucksack: ", "In backpack: "], [" Doppel-Münze", " double coin"], [" Perfekt-Zone", " perfect zone"], ["Zeitreisender", "Time Traveler"], ["⚓ Anker-Zone", "⚓ Anchor zone"], ["🔥 FIEBER! ×3", "🔥 FEVER! ×3"], ["🏆 Rekord in ", "🏆 Record in "], ["UNVERWUNDBAR", "INVINCIBLE"], ["Unverwundbar", "Invincible"], ["GRATIS-ANKER", "FREE ANCHOR"], ["Erste Brücke", "First Bridge"], ["Unaufhaltsam", "Unstoppable"], ["Dauerbrenner", "Evergreen"], ["Gruppen-Code", "Group code"], ["Spezial-Form", "Special shape"], ["Zuckerstange", "Candy Cane"], ["Schneeflocke", "Snowflake"], ["Sternenstaub", "Stardust"], ["Magnet-Dauer", "Magnet Duration"], ["Perfekt-Zone", "Perfect Zone"], ["Start-Schild", "Start Shield"], ["Start-Rakete", "Start Rocket"], ["Start-Magnet", "Start Magnet"], ["Combo-Retter", "Combo saver"], ["⚓ ANKER  +5", "⚓ ANCHOR  +5"], ["⏱ Spielzeit", "⏱ Playtime"], ["🔒 ab Level ", "🔒 from level "], ["Ruhige Hand", "Steady Hand"], ["GROSSE ZONE", "BIG ZONE"], ["LOS GEHT'S!", "LET'S GO!"], ["Heißer Lauf", "Hot Streak"], ["Sparschwein", "Piggy Bank"], ["Bestenliste", "Leaderboard"], ["Silbertruhe", "Silver Chest"], ["Weihnachten", "Christmas"], [" bis Rekord", " to record"], ["Extra-Leben", "Extra Life"], ["Schatzjäger", "Treasure Hunter"], ["Große Zone", "Big Zone"], ["Haarscharf", "Hair's Breadth"], ["Neuer Look", "New Look"], ["Ab ins All", "Into Space"], ["Aufsteiger", "Climber"], [" erreicht!", " reached!"], ["Gewonnen: ", "You won: "], ["Spielmodus", "Game Mode"], ["Gewöhnlich", "Common"], ["Regenbogen", "Rainbow"], ["Höhenlimit", "Height limit"], ["Drehbrücke", "Spin Bridge"], ["Bestwert: ", "Best: "], ["⚡ Upgrades", "⚡ Upgrades"], ["Münz-Glück", "Coin Luck"], [" langsamer", " slower"], [" Power-ups", " power-ups"], ["Glücksklee", "Lucky Clover"], ["Nur noch ", " Only "], ["🪐 Galaxie", "🪐 Galaxy"], ["✨ WELTALL", "✨ OUTER SPACE"], ["✨ Weltall", "✨ Space"], ["Zu steil!", "Too steep!"], ["MÜNZREGEN", "COIN RAIN"], ["KNAPP! +3", "CLOSE ONE! +3"], ["❄️ WINTER", "❄️ WINTER"], ["❄️ Winter", "❄️ Winter"], ["Hunderter", "Century"], ["Sturmfest", "Stormproof"], ["Dein Name", "Your name"], ["Vibration", "Vibration"], ["Klassisch", "Classic"], ["Zeit-Rush", "Time Rush"], ["Glücksrad", "Lucky Wheel"], ["Statistik", "Stats"], ["Hauptmenü", "Main menu"], ["Holztruhe", "Wooden Chest"], ["Goldtruhe", "Gold Chest"], ["Gestreift", "Striped"], ["Klassisch", "Classic"], ["Spielzeit", "Playtime"], ["Doppelt +", "Double +"], ["⭐ Level ", "⭐ Level "], ["🏆 Platz ", "🏆 Rank "], [" öffnen!", " open!"], ["Zu hoch!", "Too high!"], ["🦅 ADLER!", "🦅 EAGLE!"], ["🌪 STURM!", "🌪 STORM!"], ["🌪 Sturm ", "🌪 Storm "], ["Zeitlupe", "Slow Motion"], ["ZEITLUPE", "SLOW MOTION"], ["Ausdauer", "Endurance"], ["Erfolg: ", "Achievement: "], ["Bonus-XP", "bonus XP"], ["Aufgaben", "Tasks"], ["Zum Menü", "Main menu"], ["Legendär", "Legendary"], ["Mythisch", "Mythic"], ["Animiert", "Animated"], ["Leuchtet", "Glows"], ["Kristall", "Crystal"], ["Schatten", "Shadow"], ["Herzchen", "Hearts"], ["Bestwert", "Best"], ["Schritt ", "Step "], ["🚀 Höhe ", "🚀 Height "], ["GUT  +2", "GOOD  +2"], ["PERFEKT", "PERFECT"], ["🌅 ABEND", "🌅 EVENING"], ["🌙 NACHT", "🌙 NIGHT"], ["🌅 Abend", "🌅 Evening"], ["🌙 Nacht", "🌙 Night"], ["Sammler", "Collector"], [" Münzen", " coins"], ["Sprache", "Language"], ["Effekte", "Effects"], ["Erfolge", "Achievements"], ["Abholen", "Claim"], ["Drehen!", "Spin!"], ["Spielen", "Play"], ["Gewählt", "Selected"], ["Smaragd", "Emerald"], ["Galaxie", "Galaxy"], ["Diamant", "Diamond"], ["Spieler", "Players"], ["Combo x", "Combo x"], ["🎒 Items", "🎒 Items"], ["SCHILD", "SHIELD"], ["☀️ TAG", "☀️ DAY"], ["Grafik", "Graphics"], ["Leicht", "Easy"], ["Schwer", "Hard"], ["Profil", "Profile"], ["Zurück", "Back"], ["Fertig", "Done"], ["Weiter", "Resume"], ["Teilen", "Share"], ["Super!", "Great!"], ["Wählen", "Select"], ["Selten", "Rare"], ["Episch", "Epic"], ["Bambus", "Bamboo"], ["Drache", "Dragon"], ["Wasser", "Water"], ["Phönix", "Phoenix"], ["Prisma", "Prism"], ["Gruppe", "Group"], ["gesamt", "total"], ["Punkte", "points"], ["REKORD", "RECORD"], ["Runden", "Runs"], ["Schild", "Shield"], ["🛒 Shop", "🛒 Shop"], [" von ", " of "], ["Musik", "Music"], ["Truhe", "Chest"], ["Stahl", "Steel"], ["Stein", "Stone"], ["Kette", "Chain"], ["Ranke", "Vine"], ["Wolke", "Cloud"], ["Blitz", "Lightning"], ["Best ", "Best "], ["Meine", "Mine"], ["Noch ", "Only "], ["Punkt", "point"], ["Hoch", "High"], ["Holz", "Wood"], ["Seil", "Rope"], ["Alle", "All"], ["Tag ", "Day "], ["Skin", "Skin"], [" in ", " in "], ["Nur ", "Only "], ["Eis", "Ice"]];
+const I18N=[["Heute haben alle die gleichen Hindernisse. Ohne Upgrades & Items – nur dein Können zählt. Eigene Tages-Bestenliste!", "Everyone gets the same obstacles today. No upgrades or items – only skill counts. Own daily leaderboard!"], ["📊 Für Bestenliste & Statistik werden dein Name, Spielzeit und Punkte gespeichert – keine anderen Daten.", "📊 Your name, playtime and score are saved for the leaderboard & stats – nothing else."], ["Werden automatisch in deiner nächsten Runde benutzt (Klassisch oder Zeit-Rush).", "Used automatically in your next run (Classic or Time Rush)."], ["Hier läuft später ein echtes Belohnungs-Video (z.&nbsp;B. AdMob Rewarded Ad).", "A real reward video will play here later."], ["Viele Skins haben Fähigkeiten – sie wirken, solange der Skin ausgewählt ist.", "Many skins have abilities – active while the skin is selected."], ["Knapp über dem Boden (Anker-Zone) setzt du Anker – die sichern dich!", "Build just above the ground (anchor zone) to place anchors – they keep you safe!"], ["60 Sekunden – so viele Punkte wie möglich. Fehler kosten 5 Sekunden.", "60 seconds – as many points as possible. Mistakes cost 5 seconds."], ["Tippe, wenn der Balken im GELBEN Bereich ist – dann gibt's PERFEKT!", "Tap when the beam is in the YELLOW zone – that's a PERFECT!"], ["Neue Liste jeden Montag · nur Klassisch auf 🟡 Normal oder 🔴 Schwer", "New list every Monday · Classic on 🟡 Normal or 🔴 Hard only"], ["Endlos bauen, so weit du kommst. Zählt für die Online-Bestenliste.", "Build endlessly, as far as you can. Counts for the online leaderboard."], ["Mit dem gleichen Gruppen-Code seht ihr eure eigene Bestenliste.", "Everyone with the same group code shares their own leaderboard."], ["Super! Je waagrechter, desto mehr Punkte. Zu steil = Einsturz!", "Great! The flatter, the more points. Too steep = collapse!"], ["Keine Hindernisse, kein Einsturz. Einfach entspannt bauen.", "No obstacles, no collapse. Just relax and build."], ["Gib im Menü deinen Namen ein, damit du hier auftauchst.", "Enter your name in the profile to show up here."], ["Gerade keine Werbung verfügbar – versuch es später.", "No ad available right now – try again later."], ["Fast! Warte, bis der Balken im hellen Bereich ist.", "Almost! Wait until the beam is in the bright zone."], ["Komm jeden Tag wieder – die Belohnung wird größer!", "Come back every day – the reward gets bigger!"], ["Dauerhafte Verbesserungen – gelten für alle Skins.", "Permanent upgrades – apply to all skins."], [" · zählt nur bis zum ersten Absturz (ohne Video)", " · counts only until the first crash (no video)"], ["Bild lange drücken → „Bild sichern“ oder teilen", "Long-press the image → “Save image” or share"], ["🛠 Admin-Runde – zählt nicht für die Bestenliste", "🛠 Admin run – doesn't count for the leaderboard"], ["Hier läuft später ein echtes Belohnungs-Video", "A real reward video will play here later"], ["🛠 Admin-Skin freigeschaltet (im Skin-Shop)", "🛠 Admin skin unlocked (in the skin shop)"], ["📅 Tages-Challenge · neue Strecke jeden Tag", "📅 Daily Challenge · new course every day"], ["Heute schon gedreht – komm morgen wieder.", "Already spun today – come back tomorrow."], ["Online-Liste ist noch nicht eingerichtet.", "Online list is not set up yet."], ["+6 % Chance auf doppelte Münze pro Stufe", "+6 % chance of double coins per level"], ["🎄 Advents-Geschenk: Skin „Weihnachten“!", "🎄 Advent gift: “Christmas” skin!"], ["+10 % Chance auf Startschild pro Stufe", "+10 % chance to start with a shield per level"], ["+0,5° größere Perfekt-Zone pro Stufe", "+0.5° bigger perfect zone per level"], ["Balken dreht 3 % langsamer pro Stufe", "Beam spins 3 % slower per level"], ["Startet die nächste Runde mit Schild", "Start your next run with a shield"], ["▶ Video ansehen &amp; weiterspielen", "▶ Watch video & continue"], ["Tage in Folge! Komm morgen wieder.", "days in a row! Come back tomorrow."], ["Keine Verbindung zur Online-Liste.", "No connection to the online list."], ["Tippe irgendwo für eine neue Runde", "Tap anywhere for a new round"], [" Tagen · XP aus jeder Runde zählen", " days · XP from every run counts"], ["⚡ Timing – Bereich wird größer!", "⚡ Timing – zone gets bigger!"], ["Vom Schwarzen Loch verschluckt!", "Swallowed by the black hole!"], ["▶ Video ansehen & weiterspielen", "▶ Watch video & continue"], ["Einmal ohne Video weiterspielen", "Continue once without a video"], ["🛡 Schild für die nächste Runde", "🛡 Shield for your next run"], ["🥇 Platz 1 auf der Bestenliste!", "🥇 #1 on the leaderboard!"], ["Raketen-Schub direkt am Anfang", "Rocket boost right at the start"], ["15 s doppelte Punkte zum Start", "15 s double points at the start"], ["👑 Saison-Krone freigeschaltet!", "👑 Season Crown unlocked!"], ["🕳 immun gegen Schwarze Löcher", "🕳 immune to black holes"], ["Eine fremde Galaxie erreichen", "Reach an alien galaxy"], ["+2 % mehr Power-ups pro Stufe", "+2 % more power-ups per level"], ["Noch keine Runden – leg los!", "No runs yet – let's go!"], ["Einmal am Tag gratis drehen!", "One free spin every day!"], ["Von einem UFO abgeschossen!", "Shot down by a UFO!"], ["unzerstörbar · zählt nicht", "indestructible · doesn't count"], ["Im Baum hängen geblieben!", "Stuck in a tree!"], ["100 Punkte in einer Runde", "100 points in one run"], ["200 Punkte in einer Runde", "200 points in one run"], ["Die Winter-Welt erreichen", "Reach the winter world"], ["Immun gg. Schwarze Löcher", "Immune to black holes"], ["Diese Woche noch niemand", " Nobody yet this week"], ["Spiele deine erste Runde", "Play your first run"], ["60 Punkte in einer Runde", "60 points in one run"], ["Gruppen-Code (optional)", "Group code (optional)"], ["⚠️ Achtung, Höhenlimit!", "⚠️ Careful, height limit!"], ["Tippen · Drehen · Bauen", "Tap · Spin · Build"], ["🌪 STURM ÜBERSTANDEN +5", "🌪 STORM SURVIVED +5"], ["🛡 Truhen-Schild aktiv!", "🛡 Chest shield active!"], ["⚔️ BOSS: MUTTERSCHIFF!", "⚔️ BOSS: MOTHERSHIP!"], ["🎄 Frohe Weihnachten! 🎄", "🎄 Merry Christmas! 🎄"], ["Einen Sturm überstehen", "Survive a storm"], ["5 Power-ups einsammeln", "Collect 5 power-ups"], ["💖 Extra-Leben benutzt!", "💖 Extra life used!"], ["💖 Extra-Leben benutzen", "💖 Use extra life"], ["📺 Münzen verdoppeln (+", "📺 Double coins (+"], ["🎫 Saison-Pass Stufe 30", "🎫 Season Pass tier 30"], ["✅ Aufgabe erledigt: +", "✅ Task done: +"], ["50× Perfekt insgesamt", "50× Perfect in total"], ["200 Münzen einsammeln", "Collect 200 coins"], ["Bis ins Weltall bauen", "Build up into space"], ["+2 s Magnet pro Stufe", "+2 s magnet per level"], ["20 s Magnet zum Start", "20 s magnet at the start"], [" auf der Bestenliste", " on the leaderboard"], ["🏆 Neuer Rush-Rekord!", "🏆 New Rush record!"], ["🌪 Stürme überstanden", "🌪 Storms survived"], ["Alien erwischt dich!", "An alien got you!"], ["Hindernis getroffen!", "Hit an obstacle!"], ["🏆 BOSS BESIEGT! +15", "🏆 BOSS DEFEATED! +15"], ["🚀 Unendlich weiter!", "🚀 To infinity!"], ["Asteroid getroffen!", "Hit an asteroid!"], ["Vom Adler erwischt!", "Caught by the eagle!"], ["Schaffe 20× Perfekt", "Get 20× Perfect"], ["📋 Tägliche Aufgaben", "📋 Daily Tasks"], ["Niedrig (schneller)", "Low (faster)"], ["📺 Münzen verdoppeln", "📺 Double coins"], ["Skin „Saison-Krone“", "Skin “Season Crown”"], ["⏱ Zeit abgelaufen!", "⏱ Time's up!"], ["🪙 Münzen gesammelt", "🪙 Coins collected"], ["Vom Boss erwischt!", "Caught by the boss!"], ["Combo x6 erreichen", "Reach combo x6"], ["Combo x9 erreichen", "Reach combo x9"], ["Brückenbauer-Profi", "Bridge Pro"], ["Level 10 erreichen", "Reach level 10"], ["30 Minuten spielen", "Play for 30 minutes"], ["Startet mit Schild", "Starts with a shield"], ["Heute noch niemand", "Nobody yet today"], ["  🌍 Online zählt: ", "  🌍 Online counts: "], [" – sei der Erste!", " – be the first!"], [" in deiner Gruppe", " in your group"], ["☄️ METEORSCHAUER!", "☄️ METEOR SHOWER!"], ["🎮 Runden gespielt", "🎮 Runs played"], ["📸 Ergebnis teilen", "📸 Share result"], ["Schaffst du mehr?", "Can you beat it?"], ["Falsche Richtung!", "Wrong direction!"], ["Zeppelin gerammt!", "Rammed a zeppelin!"], ["Satellit gerammt!", "Rammed a satellite!"], ["50 Runden spielen", "Play 50 runs"], ["Einen Skin kaufen", "Buy a skin"], ["Erreiche Combo x5", "Reach combo x5"], ["Werbe-Platzhalter", "Ad placeholder"], ["🔗 COMBO GERETTET!", "🔗 COMBO SAVED!"], ["📅 Tages-Challenge", "📅 Daily Challenge"], [" bis zum Rekord!", " to beat your record!"], ["📅 Tages-Bonus: +", "📅 Daily bonus: +"], ["⚔️ BOSS: DRACHE!", "⚔️ BOSS: DRAGON!"], ["🪐 FREMDE GALAXIE", "🪐 ALIEN GALAXY"], ["🗓 Kalenderwoche ", "🗓 Week "], ["🎁 nur aus Truhen", "🎁 chests only"], ["Vogel getroffen!", "Hit a bird!"], ["20× Knapp vorbei", "20 near misses"], ["Sammle 15 Münzen", "Collect 15 coins"], ["-Skins schon da)", " skins already owned)"], ["Zeit pro Spieler", "Time per player"], ["+1,5 s pro Stufe", "+1.5 s per level"], ["📅 Heute bester: ", "📅 Today's best: "], ["Saison endet in ", "Season ends in "], ["Für Bestenliste", "For the leaderboard"], ["⏱ Rush-Rekord: ", "⏱ Rush record: "], ["⚓ Anker gesetzt", "⚓ Anchors placed"], ["⚡ STEILPASS! +2", "⚡ STEEP PASS! +2"], ["🏆 Neuer Rekord!", "🏆 New record!"], ["🌉 Balken gebaut", "🌉 Beams built"], ["🎁 Truhe öffnen!", "🎁 Open chest!"], ["📸 Dein Ergebnis", "📸 Your result"], ["Ballon gerammt!", "Rammed a balloon!"], ["Doppelte Punkte", "Double Points"], ["DOPPELTE PUNKTE", "DOUBLE POINTS"], ["10 Anker setzen", "Place 10 anchors"], ["3× Knapp vorbei", "3 near misses"], ["Spiele 5 Runden", "Play 5 runs"], ["keine Fähigkeit", "no ability"], ["🎒 Items aktiv: ", "🎒 Items active: "], ["👽 UFO-ANGRIFF!", "👽 UFO ATTACK!"], ["🌌 STRATOSPHÄRE", "🌌 STRATOSPHERE"], ["🌌 Stratosphäre", "🌌 Stratosphere"], ["🛡 SCHILD HÄLT!", "🛡 SHIELD HOLDS!"], ["🏆 Bester Score", "🏆 Best score"], ["😬 Knapp vorbei", "😬 Near misses"], ["Boden berührt!", "Hit the ground!"], ["Wintereinbruch", "Winter Is Here"], ["Andere Galaxie", "Another Galaxy"], ["freigeschaltet", "unlocked"], ["Schwarzes Loch", "Black Hole"], ["Power-up-Glück", "Power-up Luck"], ["Punkte-Booster", "Point Booster"], ["📅 Tages-Bonus", "📅 Daily Bonus"], ["⚓ ANKER HÄLT!", "⚓ ANCHOR HOLDS!"], ["⚓ Anker aktiv", "⚓ Anchor active"], ["NEUER REKORD!", "NEW RECORD!"], ["🔥 Beste Combo", "🔥 Best combo"], ["RAKETEN-SCHUB", "ROCKET BOOST"], ["Perfektionist", "Perfectionist"], ["Gut verankert", "Well Anchored"], ["Setze 3 Anker", "Place 3 anchors"], ["Münzen (alle ", "coins (all "], ["Kalenderwoche", "Week"], ["Einstellungen", "Settings"], ["Schwierigkeit", "Difficulty"], ["Partikel-Spur", "Particle trail"], ["Glücks-Schild", "Lucky Shield"], ["Ruhiger Start", "Calm Start"], ["Im Rucksack: ", "In backpack: "], [" Doppel-Münze", " double coin"], [" Perfekt-Zone", " perfect zone"], ["Zeitreisender", "Time Traveler"], [" (ohne Video)", " (no video)"], ["🎫 Saison-Pass", "🎫 Season Pass"], [" im Rucksack!", " in backpack!"], ["⚓ Anker-Zone", "⚓ Anchor zone"], ["🔥 FIEBER! ×3", "🔥 FEVER! ×3"], ["🏆 Rekord in ", "🏆 Record in "], ["UNVERWUNDBAR", "INVINCIBLE"], ["Unverwundbar", "Invincible"], ["GRATIS-ANKER", "FREE ANCHOR"], ["Erste Brücke", "First Bridge"], ["Unaufhaltsam", "Unstoppable"], ["Dauerbrenner", "Evergreen"], ["Gruppen-Code", "Group code"], ["Spezial-Form", "Special shape"], ["Zuckerstange", "Candy Cane"], ["Schneeflocke", "Snowflake"], ["Sternenstaub", "Stardust"], ["Magnet-Dauer", "Magnet Duration"], ["Perfekt-Zone", "Perfect Zone"], ["Start-Schild", "Start Shield"], ["Start-Rakete", "Start Rocket"], ["Start-Magnet", "Start Magnet"], ["Combo-Retter", "Combo saver"], ["Saison-Krone", "Season Crown"], ["⚓ ANKER  +5", "⚓ ANCHOR  +5"], ["⏱ Spielzeit", "⏱ Playtime"], ["🔒 ab Level ", "🔒 from level "], ["Ruhige Hand", "Steady Hand"], ["GROSSE ZONE", "BIG ZONE"], ["LOS GEHT'S!", "LET'S GO!"], ["Heißer Lauf", "Hot Streak"], ["Sparschwein", "Piggy Bank"], ["Bestenliste", "Leaderboard"], ["Silbertruhe", "Silver Chest"], ["Weihnachten", "Christmas"], [" bis Rekord", " to record"], ["Extra-Leben", "Extra Life"], ["Schatzjäger", "Treasure Hunter"], ["Große Zone", "Big Zone"], ["Haarscharf", "Hair's Breadth"], ["Neuer Look", "New Look"], ["Ab ins All", "Into Space"], ["Aufsteiger", "Climber"], [" erreicht!", " reached!"], ["Gewonnen: ", "You won: "], ["Spielmodus", "Game Mode"], ["Gewöhnlich", "Common"], ["Regenbogen", "Rainbow"], ["Höhenlimit", "Height limit"], ["Drehbrücke", "Spin Bridge"], ["Bestwert: ", "Best: "], ["⚡ Upgrades", "⚡ Upgrades"], ["Münz-Glück", "Coin Luck"], [" langsamer", " slower"], [" Power-ups", " power-ups"], ["Glücksklee", "Lucky Clover"], ["Nur noch ", " Only "], ["🪐 Galaxie", "🪐 Galaxy"], ["✨ WELTALL", "✨ OUTER SPACE"], ["✨ Weltall", "✨ Space"], ["Zu steil!", "Too steep!"], ["MÜNZREGEN", "COIN RAIN"], ["KNAPP! +3", "CLOSE ONE! +3"], ["❄️ WINTER", "❄️ WINTER"], ["❄️ Winter", "❄️ Winter"], ["Hunderter", "Century"], ["Sturmfest", "Stormproof"], ["Dein Name", "Your name"], ["Vibration", "Vibration"], ["Klassisch", "Classic"], ["Zeit-Rush", "Time Rush"], ["Glücksrad", "Lucky Wheel"], ["Statistik", "Stats"], ["Hauptmenü", "Main menu"], ["Holztruhe", "Wooden Chest"], ["Goldtruhe", "Gold Chest"], ["Gestreift", "Striped"], ["Klassisch", "Classic"], ["Spielzeit", "Playtime"], ["Doppelt +", "Double +"], ["📅 Heute, ", "📅 Today, "], ["Fertig! 🎉", "Done! 🎉"], ["⭐ Level ", "⭐ Level "], ["🏆 Platz ", "🏆 Rank "], [" öffnen!", " open!"], ["Zu hoch!", "Too high!"], ["🦅 ADLER!", "🦅 EAGLE!"], ["🌪 STURM!", "🌪 STORM!"], ["🌪 Sturm ", "🌪 Storm "], ["Zeitlupe", "Slow Motion"], ["ZEITLUPE", "SLOW MOTION"], ["Ausdauer", "Endurance"], ["Erfolg: ", "Achievement: "], ["Bonus-XP", "bonus XP"], ["Aufgaben", "Tasks"], ["Zum Menü", "Main menu"], ["Legendär", "Legendary"], ["Mythisch", "Mythic"], ["Animiert", "Animated"], ["Leuchtet", "Glows"], ["Kristall", "Crystal"], ["Schatten", "Shadow"], ["Herzchen", "Hearts"], ["Bestwert", "Best"], ["Schritt ", "Step "], [" Münzen!", " coins!"], ["🚀 Höhe ", "🚀 Height "], ["GUT  +2", "GOOD  +2"], ["PERFEKT", "PERFECT"], ["🌅 ABEND", "🌅 EVENING"], ["🌙 NACHT", "🌙 NIGHT"], ["🌅 Abend", "🌅 Evening"], ["🌙 Nacht", "🌙 Night"], ["Sammler", "Collector"], [" Münzen", " coins"], ["Sprache", "Language"], ["Effekte", "Effects"], ["Erfolge", "Achievements"], ["Abholen", "Claim"], ["Drehen!", "Spin!"], ["Spielen", "Play"], ["Gewählt", "Selected"], ["Smaragd", "Emerald"], ["Galaxie", "Galaxy"], ["Diamant", "Diamond"], ["Spieler", "Players"], ["Combo x", "Combo x"], ["🎒 Items", "🎒 Items"], ["🌍 Woche", "🌍 Week"], ["📅 Heute", "📅 Today"], ["SCHILD", "SHIELD"], ["☀️ TAG", "☀️ DAY"], ["Grafik", "Graphics"], ["Leicht", "Easy"], ["Schwer", "Hard"], ["Profil", "Profile"], ["Zurück", "Back"], ["Fertig", "Done"], ["Weiter", "Resume"], ["Teilen", "Share"], ["Super!", "Great!"], ["Wählen", "Select"], ["Selten", "Rare"], ["Episch", "Epic"], ["Bambus", "Bamboo"], ["Drache", "Dragon"], ["Wasser", "Water"], ["Phönix", "Phoenix"], ["Prisma", "Prism"], ["Gruppe", "Group"], ["gesamt", "total"], ["Punkte", "points"], ["REKORD", "RECORD"], ["Runden", "Runs"], ["Schild", "Shield"], ["🛒 Shop", "🛒 Shop"], ["Saison", "Season"], ["Stufe ", "Tier "], [" von ", " of "], ["Musik", "Music"], ["Truhe", "Chest"], ["Stahl", "Steel"], ["Stein", "Stone"], ["Kette", "Chain"], ["Ranke", "Vine"], ["Wolke", "Cloud"], ["Blitz", "Lightning"], ["Best ", "Best "], ["Meine", "Mine"], ["Noch ", "Only "], ["Punkt", "point"], ["Hoch", "High"], ["Holz", "Wood"], ["Seil", "Rope"], ["Alle", "All"], ["Tag ", "Day "], ["Skin", "Skin"], [" in ", " in "], ["Nur ", "Only "], ["Eis", "Ice"]];
 function L_(t){if(t==null)return t;t=String(t);if(!settings||settings.lang!=='en')return t;for(const p of I18N)if(t.indexOf(p[0])>=0)t=t.split(p[0]).join(p[1]);return t}
 let i18nBusy=false;
 function trNode(n){if(n.nodeType===3){if(!/[A-Za-zÄÖÜäöüß]/.test(n.nodeValue))return;if(n.__tr!==n.nodeValue){n.__de=n.nodeValue}const v=settings.lang==='en'?L_(n.__de):n.__de;if(n.nodeValue!==v){n.nodeValue=v}n.__tr=v}
@@ -1324,14 +1381,14 @@ $('btnSetBack').onclick=()=>{$('setOv').classList.add('hidden');$(setFrom).class
 $('setMus').oninput=e=>{settings.mus=+e.target.value;LS.set('settings',settings);if(AC)busOut('mus')};
 $('setSfx').oninput=e=>{settings.sfx=+e.target.value;LS.set('settings',settings);if(AC){busOut('sfx');sfx.click()}};
 $('setVib').onchange=e=>{settings.vib=e.target.checked;LS.set('settings',settings);vib(30)};
-$('subAll').onclick=()=>{lbSub='all';setTab('online')};$('subGrp').onclick=()=>{lbSub='grp';setTab('online')};
+$('subAll').onclick=()=>{lbSub='all';setTab(lbTab)};$('subGrp').onclick=()=>{lbSub='grp';setTab(lbTab)};
 if(skinId==='admin'&&(pname||'').toLowerCase()!=='admin'){skinId='wood';LS.set('skin',skinId);applySkinTop()}
 $('nameIn').addEventListener('input',e=>{pname=e.target.value.trim().slice(0,12);LS.set('name',pname);
   if(pname.toLowerCase()==='admin'){if(!LS.get('adminSeen',false)){LS.set('adminSeen',true);toast('🛠 Admin-Skin freigeschaltet (im Skin-Shop)')}}
   else if(skinId==='admin'){skinId='wood';LS.set('skin',skinId);applySkinTop()}});
 $('btnBoardM').onclick=()=>openBoard('menu');
 $('btnChest').onclick=e=>{e.stopPropagation();openChest('over')};
-$('btnChestOk').onclick=()=>{$('chestOv').classList.add('hidden');$(chestRet).classList.remove('hidden');st.overAt=performance.now();if(chestRet==='menu'){$('menuCoins').textContent='🪙 '+coins;$('lvlM').innerHTML=lvlHTML()}};
+$('btnChestOk').onclick=()=>{$('chestOv').classList.add('hidden');$(chestRet).classList.remove('hidden');if(chestRet==='passOv')renderPass();st.overAt=performance.now();if(chestRet==='menu'){$('menuCoins').textContent='🪙 '+coins;$('lvlM').innerHTML=lvlHTML()}};
 $('lvlM').innerHTML=lvlHTML();
 $('btnStatsM').onclick=()=>openOv('statsOv','menu',renderStats);
 $('btnAchM').onclick=()=>openOv('achOv','menu',renderAch);
@@ -1343,7 +1400,7 @@ $('btnResume').onclick=()=>setPause(false);
 $('btnQuit').onclick=()=>{logSession();st.paused=false;applySkinTop();$('timer').classList.add('hidden');$('prog').classList.add('hidden');$('pauseOv').classList.add('hidden');$('hud').classList.add('hidden');saveStats();newGame('menu');
   $('menuCoins').textContent='🪙 '+coins;$('menuBest').textContent=best?'Bestwert: '+best:'';renderMissions('missionsM');renderMissBadge&&renderMissBadge();$('lvlM').innerHTML=lvlHTML();$('menu').classList.remove('hidden')};
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&st.phase==='play'&&!st.paused)setPause(true)});
-$('tabLocal').onclick=()=>setTab('local');$('tabOnline').onclick=()=>setTab('online');
+$('tabLocal').onclick=()=>setTab('local');$('tabOnline').onclick=()=>setTab('online');$('tabDaily').onclick=()=>setTab('daily');
 $('btnBoardO').onclick=e=>{e.stopPropagation();openBoard('over')};
 $('btnBoardBack').onclick=()=>{$('board').classList.add('hidden');$(boardFrom).classList.remove('hidden')};
 $('btnHome').onclick=e=>{e.stopPropagation();sfx.click();applySkinTop();
@@ -1377,7 +1434,7 @@ function update(dt){
   if(st.phase==='play'&&st.mode==='rush'){st.timeLeft-=dt;const tl=Math.max(0,Math.ceil(st.timeLeft));const el=$('timer');const tx='⏱ '+tl;if(el.textContent!==tx)el.textContent=tx;el.classList.toggle('low',st.timeLeft<10);
     if(st.timeLeft<=0){st.reason='⏱ Zeit abgelaufen!';$('timer').classList.add('hidden');showOver();return}}
   if(st.phase==='play'&&st.rocket){const R=st.rocket;R.t-=dt;
-    for(let i=0;i<3;i++)st.parts.push({x:st.px-rnd(0,10),y:st.py-rnd(0,10),vx:rnd(-60,0),vy:rnd(-80,-20),t:0.2,col:['#ffd166','#ff7a1a','#ff3d00'][i]});
+    for(let i=0;i<3;i++)st.parts.push({x:st.px-vrnd(0,10),y:st.py-vrnd(0,10),vx:vrnd(-60,0),vy:vrnd(-80,-20),t:0.2,col:['#ffd166','#ff7a1a','#ff3d00'][i]});
     if(R.t<=0){
       if(R.n>0){const a=0.92,sg={x1:st.px,y1:st.py,x2:st.px+L*Math.cos(a),y2:st.py+L*Math.sin(a),born:st.t};st.segs.push(sg);
         st.px=sg.x2;st.py=sg.y2;st.score+=1;R.n--;R.t=0.13;ring(sg.x2,sg.y2,'#ff9f43',50);st.zoom=0.02;vib(10);
@@ -1406,7 +1463,7 @@ function update(dt){
       if(low<GROUND){f.cy+=GROUND-low;
         if(Math.abs(f.vy)<120){f.rest=true;f.ang=Math.round(f.ang/Math.PI)*Math.PI;f.cy=GROUND+TH/2}
         else{f.vy=-f.vy*0.3;f.vx*=0.6;f.va*=0.5;
-          for(let i=0;i<4;i++)st.parts.push({x:f.cx,y:GROUND+2,vx:rnd(-80,80),vy:rnd(20,90),t:0,col:'rgba(150,120,90,0.8)'})}}
+          for(let i=0;i<4;i++)st.parts.push({x:f.cx,y:GROUND+2,vx:vrnd(-80,80),vy:vrnd(20,90),t:0,col:'rgba(150,120,90,0.8)'})}}
     }
     if(st.anchorSave&&st.fallT>1.4){
       const a=st.anchorSave;st.anchorSave=null;st.px=a.x;st.py=a.y;st.a=Math.PI;st.combo=0;st.falling=[];st.phase='play';
@@ -1423,13 +1480,13 @@ function update(dt){
   st.pops=st.pops.filter(p=>p.t<1);
   {const k=skin();if(k.fx&&st.phase!=='menu'&&!window.__gfxLow){const segs=st.segs.slice(-10);
     for(const g of segs){if(Math.random()>dt*2.2)continue;const t=Math.random(),x=g.x1+(g.x2-g.x1)*t,y=g.y1+(g.y2-g.y1)*t;
-      const fx=k.fx,P={x,y,t:0,vx:rnd(-20,20),vy:0,col:'#fff'};
-      if(fx==='fire'){P.up=1;P.vy=rnd(40,90);P.col=['#ffd166','#ff7a1a','#ff3d00'][Math.floor(Math.random()*3)]}
-      else if(fx==='snow'){P.slow=1;P.vy=-rnd(10,30);P.col='#ffffff';P.g='❄'}
-      else if(fx==='stars'){P.up=1;P.vy=rnd(5,25);P.col='#ffe066';P.g='✦'}
-      else if(fx==='hearts'){P.up=1;P.vy=rnd(25,55);P.col='#ff6fa8';P.g='♥'}
-      else if(fx==='void'){P.up=1;P.vy=rnd(5,20);P.col='#b46cff'}
-      else if(fx==='prism'){P.up=1;P.vy=rnd(15,40);P.col='hsl('+Math.floor(Math.random()*360)+',95%,65%)';P.g='✦'}
+      const fx=k.fx,P={x,y,t:0,vx:vrnd(-20,20),vy:0,col:'#fff'};
+      if(fx==='fire'){P.up=1;P.vy=vrnd(40,90);P.col=['#ffd166','#ff7a1a','#ff3d00'][Math.floor(Math.random()*3)]}
+      else if(fx==='snow'){P.slow=1;P.vy=-vrnd(10,30);P.col='#ffffff';P.g='❄'}
+      else if(fx==='stars'){P.up=1;P.vy=vrnd(5,25);P.col='#ffe066';P.g='✦'}
+      else if(fx==='hearts'){P.up=1;P.vy=vrnd(25,55);P.col='#ff6fa8';P.g='♥'}
+      else if(fx==='void'){P.up=1;P.vy=vrnd(5,20);P.col='#b46cff'}
+      else if(fx==='prism'){P.up=1;P.vy=vrnd(15,40);P.col='hsl('+Math.floor(Math.random()*360)+',95%,65%)';P.g='✦'}
       st.parts.push(P)}}}
   for(const p of st.parts){p.t+=dt;if(p.up){p.vy+=10*dt}else if(p.slow){p.vy-=20*dt}else p.vy-=500*dt;p.x+=p.vx*dt;p.y+=p.vy*dt}
   st.parts=st.parts.filter(p=>p.t<0.9);
@@ -1696,7 +1753,7 @@ function bolt(x,y){dot(x,y,TH*S*0.42,'#3a3f48');dot(x-1*S,y-1*S,TH*S*0.22,'#9aa3
 function draw(){
   ctx.save();
   if(st.zoom>0.001){ctx.translate(W/2,H/2);ctx.scale(1+st.zoom,1+st.zoom);ctx.translate(-W/2,-H/2)}
-  if(st.shake>0)ctx.translate(rnd(-st.shake,st.shake),rnd(-st.shake,st.shake));
+  if(st.shake>0)ctx.translate(vrnd(-st.shake,st.shake),vrnd(-st.shake,st.shake));
   drawSky();drawSpace();drawClouds();drawLandscape();drawGround();drawCliff();
   if(bestDist>0&&st.phase!=='menu'){
     const fx=sx(bestDist),g=sy(GROUND);
