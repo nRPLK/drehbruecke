@@ -175,6 +175,16 @@ h1,.btn,.sign h1,.sign .tag,#score,.big,.tab,.coins,.coinbox,.reason,.rank,#ches
 .ib i.on{display:block}
 #menu{gap:18px}
 #profOv input{width:260px}
+.days{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;width:100%;max-width:340px}
+.day{background:linear-gradient(#f8ecd0,#ecd7ad);border:3px solid #8a5a30;border-radius:12px;padding:8px 2px;text-align:center;color:#4a2d14;font-family:"Lilita One",system-ui;font-size:13px;box-shadow:0 4px 0 #5e3b1e}
+.day b{display:block;font-size:20px}
+.day.done{opacity:.55}.day.today{border-color:#ffcf33;box-shadow:0 4px 0 #b8860b,0 0 0 3px #ffe066;transform:scale(1.06)}
+.day.big{grid-column:span 2}
+.wheelwrap{position:relative;width:min(78vw,300px);height:min(78vw,300px)}
+#wheelCv{width:100%;height:100%}
+.wheelptr{position:absolute;top:-14px;left:50%;transform:translateX(-50%);font-size:30px;color:#ffcf33;text-shadow:0 2px 0 #5e3b1e}
+.setrow select{font:inherit;padding:6px 8px;border-radius:8px;border:2px solid #8a5a30;background:#fffaf0;color:#4a2d14}
+#wheelBadge{background:#ffb020}
 </style>
 </head>
 <body>
@@ -203,6 +213,7 @@ h1,.btn,.sign h1,.sign .tag,#score,.big,.tab,.coins,.coinbox,.reason,.rank,#ches
     <button class="ib" id="btnMissM"><span>📋</span>Aufgaben<i id="missBadge"></i></button>
     <button class="ib" id="btnAchM"><span>🏅</span>Erfolge</button>
     <button class="ib" id="btnStatsM"><span>📊</span>Statistik</button>
+    <button class="ib" id="btnWheelM"><span>🎡</span>Glücksrad<i id="wheelBadge">!</i></button>
   </div>
 </div>
 
@@ -224,6 +235,29 @@ h1,.btn,.sign h1,.sign .tag,#score,.big,.tab,.coins,.coinbox,.reason,.rank,#ches
   <button class="btn" id="btnProfOk">Fertig</button>
 </div>
 
+<div id="loginOv" class="ov hidden">
+  <h1 style="font-size:34px">📅 Tages-Bonus</h1>
+  <div class="muted" id="loginInfo"></div>
+  <div class="days" id="loginDays"></div>
+  <button class="btn" id="btnLoginClaim">Abholen</button>
+</div>
+
+<div id="wheelOv" class="ov hidden">
+  <h1 style="font-size:34px">🎡 Glücksrad</h1>
+  <div class="wheelwrap"><canvas id="wheelCv" width="560" height="560"></canvas><div class="wheelptr">▼</div></div>
+  <div id="wheelRes" class="rank"></div>
+  <button class="btn ad" id="btnSpin">Drehen!</button>
+  <button class="btn alt" id="btnWheelBack">Zurück</button>
+</div>
+
+<div id="shareOv" class="ov hidden">
+  <h1 style="font-size:30px">📸 Dein Ergebnis</h1>
+  <img id="shareImg" alt="" style="width:min(80vw,340px);border-radius:16px;box-shadow:0 8px 24px rgba(0,0,0,.35)">
+  <div class="muted" id="shareHint">Bild lange drücken → „Bild sichern“ oder teilen</div>
+  <button class="btn" id="btnShareNow">📤 Teilen</button>
+  <button class="btn alt" id="btnShareBack">Zurück</button>
+</div>
+
 <div id="missOv" class="ov hidden">
   <h1 style="font-size:34px">📋 Aufgaben</h1>
   <div class="ms" id="missionsM"></div>
@@ -241,6 +275,7 @@ h1,.btn,.sign h1,.sign .tag,#score,.big,.tab,.coins,.coinbox,.reason,.rank,#ches
   <button class="btn chest hidden" id="btnChest">🎁 Truhe öffnen!</button>
   <div class="ms" id="missionsO"></div>
   <button class="btn ad" id="btnRevive">▶ Video ansehen &amp; weiterspielen</button>
+  <button class="btn alt" id="btnShare">📸 Ergebnis teilen</button>
   <div class="row2">
     <button class="btn alt sm" id="btnShopO">🎨 Skins</button>
     <button class="btn alt sm" id="btnBoardO">🏆 Bestenliste</button>
@@ -272,6 +307,8 @@ h1,.btn,.sign h1,.sign .tag,#score,.big,.tab,.coins,.coinbox,.reason,.rank,#ches
     <div class="setrow"><span>🎵 Musik</span><input type="range" id="setMus" min="0" max="1" step="0.05"></div>
     <div class="setrow"><span>🔊 Effekte</span><input type="range" id="setSfx" min="0" max="1" step="0.05"></div>
     <div class="setrow"><span>📳 Vibration</span><input type="checkbox" id="setVib"></div>
+    <div class="setrow"><span>🖼 Grafik</span><select id="setGfx"><option value="high">Hoch</option><option value="low">Niedrig (schneller)</option></select></div>
+    <div class="setrow"><span>🌍 Sprache</span><select id="setLang"><option value="de">Deutsch</option><option value="en">English</option></select></div>
   </div>
   <button class="btn alt" id="btnSetBack">Zurück</button>
 </div>
@@ -317,7 +354,7 @@ let TOP=400,FITTOP=400;
 const ANCH=70,GROUND=-230,L=90,TH=14,LIMIT=60,PERFECT=7,GOOD=14;
 let W,H,S;
 function resize(){
-  const d=Math.min(2,window.devicePixelRatio||1);
+  const d=window.__gfxLow?1:Math.min(2,window.devicePixelRatio||1);
   W=innerWidth;H=innerHeight;cv.width=W*d;cv.height=H*d;ctx.setTransform(d,0,0,d,0,0);
   S=Math.min(W/420,H*0.74/(FITTOP-GROUND));
 }
@@ -356,9 +393,10 @@ const SKINS=[
   {id:'phoenix',name:'Phönix',chest:true,base:'#c2410c',hi:'#ffd166',glow:'#ff7a1a',top:660,wave:'sawtooth',snd:'lava',anim:'lava',fx:'fire'},
   {id:'void',name:'Schwarzes Loch',chest:true,base:'#07020f',hi:'#b46cff',glow:'#8b2cff',top:700,wave:'sine',snd:'space',anim:'void',fx:'void'},
   {id:'prism',name:'Prisma',chest:true,rainbow:true,glow:'#ffffff',top:720,wave:'triangle',snd:'crystal',fx:'prism'},
+  {id:'xmas',name:'Weihnachten',chest:true,base:'#c62828',hi:'#ffffff',glow:'#ffd23a',top:560,wave:'triangle',snd:'crystal',dash:true,fx:'snow'},
   {id:'admin',name:'🛠 Admin',admin:true,base:'#111111',hi:'#ffe600',glow:'#ffe600',top:700,wave:'square',snd:'admin',anim:'admin'}];
 const RAR={c:{n:'Gewöhnlich',col:'#9ca3af'},r:{n:'Selten',col:'#3b82f6'},e:{n:'Episch',col:'#a855f7'},l:{n:'Legendär',col:'#f59e0b'},m:{n:'Mythisch',col:'#ef4444'}};
-{const RA={wood:'c',bamboo:'c',stone:'c',steel:'c',rope:'c',ice:'r',candy:'r',pixel:'r',neon:'r',chain:'r',vine:'r',cloud:'r',love:'r',snow:'r',lava:'e',emerald:'e',rainbow:'e',crystal:'e',water:'e',electric:'e',gold:'l',galaxy:'l',diamond:'l',dragon:'l',stardust:'l',phoenix:'l',shadow:'m',void:'m',prism:'m',admin:'m'};
+{const RA={xmas:'l',wood:'c',bamboo:'c',stone:'c',steel:'c',rope:'c',ice:'r',candy:'r',pixel:'r',neon:'r',chain:'r',vine:'r',cloud:'r',love:'r',snow:'r',lava:'e',emerald:'e',rainbow:'e',crystal:'e',water:'e',electric:'e',gold:'l',galaxy:'l',diamond:'l',dragon:'l',stardust:'l',phoenix:'l',shadow:'m',void:'m',prism:'m',admin:'m'};
  for(const k of SKINS)k.rar=RA[k.id]||'c';}
 const isAdmin=()=>skinId==='admin'&&(pname||'').toLowerCase()==='admin';
 function applySkinTop(){FITTOP=460;TOP=1e6;resize()}
@@ -693,8 +731,10 @@ function rollChest(){
   if(r<0.8){LS.set('nextShield',true);return '🛡 Schild für die nächste Runde'}
   addXP(100*m);return '⭐ '+(100*m)+' Bonus-XP';
 }
-function openChest(){
-  chestReady=false;$('btnChest').classList.add('hidden');$('over').classList.add('hidden');$('chestOv').classList.remove('hidden');
+let chestRet='over';
+function openChest(ret){chestRet=ret||'over';
+  if(chestRet==='over'){chestReady=false;$('btnChest').classList.add('hidden');$('over').classList.add('hidden')}
+  $('chestOv').classList.remove('hidden');
   const ic=$('chestIcon'),rw=$('chestReward');rw.textContent='';$('btnChestOk').classList.add('hidden');
   ic.textContent=CHESTS[chestTier].i;ic.style.filter='';$('chestTitle').textContent=CHESTS[chestTier].n;
   ic.classList.remove('shake');void ic.offsetWidth;ic.classList.add('shake');
@@ -715,6 +755,82 @@ function progInfo(){
     if(st.py<h)return [n+' in '+Math.ceil((h-st.py)/10)+' m',Math.max(0,st.py)/h];
   return ['🚀 Unendlich weiter!',1];
 }
+
+// ---------- date helpers / advent ----------
+const dk=d=>{d=d||new Date();return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate()};
+const ADVENT=new Date().getMonth()===11||location.search.includes('advent');
+
+// ---------- login streak ----------
+const LOGIN_REW=[10,20,30,40,60,80,'chest'];
+function loginState(){
+  const L0=LS.get('login',{last:'',streak:0,claimed:''}),today=dk(),y=new Date();y.setDate(y.getDate()-1);const yest=dk(y);
+  if(L0.last!==today){L0.streak=L0.last===yest?L0.streak+1:1;L0.last=today;LS.set('login',L0)}
+  return L0;
+}
+function showLogin(){
+  const L0=loginState();if(L0.claimed===dk())return false;
+  const day=((L0.streak-1)%7)+1;
+  $('loginInfo').textContent=L0.streak>1?'🔥 '+L0.streak+' Tage in Folge! Komm morgen wieder.':'Komm jeden Tag wieder – die Belohnung wird größer!';
+  $('loginDays').innerHTML=LOGIN_REW.map((r,i)=>'<div class="day'+(i+1<day?' done':'')+(i+1===day?' today':'')+(i===6?' big':'')+'">Tag '+(i+1)+'<b>'+(r==='chest'?'🎁':'🪙 '+r)+'</b>'+(i+1<day?'✅':'')+'</div>').join('');
+  $('menu').classList.add('hidden');$('loginOv').classList.remove('hidden');
+  $('btnLoginClaim').onclick=()=>{const L1=LS.get('login');L1.claimed=dk();LS.set('login',L1);const r=LOGIN_REW[day-1];
+    $('loginOv').classList.add('hidden');
+    if(r==='chest'){chestTier=2;openChest('menu')}else{coins+=r;LS.set('coins',coins);sfx.record();toast('📅 Tages-Bonus: +'+r+' 🪙');$('menuCoins').textContent='🪙 '+coins;$('menu').classList.remove('hidden')}};
+  return true;
+}
+
+// ---------- lucky wheel ----------
+const WHEEL=[{t:'20 🪙',c:'#f59e0b',f:()=>{coins+=20}},{t:'🛡 Schild',c:'#3b82f6',f:()=>LS.set('nextShield',true)},{t:'50 🪙',c:'#10b981',f:()=>{coins+=50}},{t:'10 🪙',c:'#ef4444',f:()=>{coins+=10}},
+  {t:'⭐ 100 XP',c:'#8b5cf6',f:()=>addXP(100)},{t:'30 🪙',c:'#14b8a6',f:()=>{coins+=30}},{t:'100 🪙',c:'#ec4899',f:()=>{coins+=100}},{t:'🎁 Truhe',c:'#eab308',f:null}];
+const WW=[18,14,14,16,12,14,7,5];
+let wheelAng=0,spinning=false;
+function wheelFree(){return LS.get('wheel','')!==dk()}
+function drawWheel(){
+  const c=$('wheelCv'),x=c.getContext('2d'),R=270,cx=280,cy=280,n=WHEEL.length;x.clearRect(0,0,560,560);
+  for(let i=0;i<n;i++){const a0=wheelAng+i*2*Math.PI/n-Math.PI/2,a1=a0+2*Math.PI/n;x.fillStyle=WHEEL[i].c;x.beginPath();x.moveTo(cx,cy);x.arc(cx,cy,R,a0,a1);x.closePath();x.fill();
+    x.strokeStyle='#fff6e0';x.lineWidth=4;x.stroke();
+    x.save();x.translate(cx,cy);const am=a0+Math.PI/n;x.rotate(am);x.fillStyle='#fff';x.font='bold 30px "Lilita One",system-ui';x.textBaseline='middle';const flip=Math.cos(am)<0;if(flip){x.rotate(Math.PI);x.textAlign='left';x.fillText(L_(WHEEL[i].t),-R+18,0)}else{x.textAlign='right';x.fillText(L_(WHEEL[i].t),R-18,0)}x.restore()}
+  x.fillStyle='#8a5a30';x.beginPath();x.arc(cx,cy,44,0,Math.PI*2);x.fill();x.strokeStyle='#5e3b1e';x.lineWidth=6;x.stroke();
+  x.fillStyle='#fff6e0';x.font='bold 28px "Lilita One",system-ui';x.textAlign='center';x.textBaseline='middle';x.fillText('🎡',cx,cy+2);
+}
+function openWheel(){$('menu').classList.add('hidden');$('wheelOv').classList.remove('hidden');$('wheelRes').textContent=wheelFree()?'Einmal am Tag gratis drehen!':'Heute schon gedreht – komm morgen wieder.';$('btnSpin').disabled=!wheelFree();$('btnSpin').style.opacity=wheelFree()?1:0.5;drawWheel();sfx.click()}
+function spin(){
+  if(spinning||!wheelFree())return;spinning=true;LS.set('wheel',dk());audio();
+  let r=Math.random()*WW.reduce((a,b)=>a+b),idx=0;for(let i=0;i<WW.length;i++){r-=WW[i];if(r<0){idx=i;break}}
+  const n=WHEEL.length,seg=2*Math.PI/n,target=-(idx*seg+seg/2)+Math.PI*2*6+rnd(-seg*0.3,seg*0.3),start=wheelAng%(2*Math.PI),T=4200,t0=performance.now();let lastTick=-1;
+  (function step(now){const k=Math.min(1,(now-t0)/T),e=1-Math.pow(1-k,4);wheelAng=start+(target-start)*e;drawWheel();
+    const tick=Math.floor(wheelAng/seg);if(tick!==lastTick){lastTick=tick;tone(900,0.03,'square',0.04)}
+    if(k<1)requestAnimationFrame(step);else{spinning=false;const W0=WHEEL[idx];$('btnSpin').disabled=true;$('btnSpin').style.opacity=0.5;
+      if(W0.f){W0.f();LS.set('coins',coins);$('wheelRes').textContent='Gewonnen: '+L_(W0.t)+'!';sfx.record();vib([30,40,60]);$('menuCoins').textContent='🪙 '+coins;$('lvlM').innerHTML=lvlHTML()}
+      else{$('wheelOv').classList.add('hidden');chestTier=2;openChest('menu')}
+      renderWheelBadge()}})(t0);
+}
+function renderWheelBadge(){$('wheelBadge').classList.toggle('on',wheelFree())}
+
+// ---------- share image ----------
+function makeShare(){
+  const c=document.createElement('canvas');c.width=1080;c.height=1350;const x=c.getContext('2d');
+  const g=x.createLinearGradient(0,0,0,1350);g.addColorStop(0,'#3d74c9');g.addColorStop(0.6,'#8ec0ec');g.addColorStop(1,'#ffd09a');x.fillStyle=g;x.fillRect(0,0,1080,1350);
+  x.fillStyle='rgba(255,255,255,.85)';[[180,220,70],[260,200,90],[340,230,60],[780,320,70],[860,300,90],[930,330,60]].forEach(p=>{x.beginPath();x.arc(p[0],p[1],p[2],0,Math.PI*2);x.fill()});
+  x.fillStyle='#4f8456';x.beginPath();x.moveTo(0,1350);for(let i=0;i<=1080;i+=20)x.lineTo(i,1150-Math.sin(i/140)*40-Math.sin(i/57)*15);x.lineTo(1080,1350);x.fill();
+  x.fillStyle='#6b4a2f';x.fillRect(0,1250,1080,100);x.fillStyle='#7cc05a';x.fillRect(0,1240,1080,20);
+  const k=skin();x.lineCap='round';
+  [[80,1000,330,930],[330,930,580,960],[580,960,830,870],[830,870,1000,820]].forEach((s0,i)=>{x.strokeStyle='rgba(0,0,0,.25)';x.lineWidth=46;x.beginPath();x.moveTo(s0[0],s0[1]+6);x.lineTo(s0[2],s0[3]+6);x.stroke();
+    x.strokeStyle=k.rainbow?'hsl('+i*70+',80%,50%)':(k.base||'#6e4524');x.lineWidth=40;x.beginPath();x.moveTo(s0[0],s0[1]);x.lineTo(s0[2],s0[3]);x.stroke();
+    x.strokeStyle=k.rainbow?'hsl('+i*70+',95%,78%)':(k.hi||'#a8743f');x.lineWidth=14;x.beginPath();x.moveTo(s0[0],s0[1]-6);x.lineTo(s0[2],s0[3]-6);x.stroke()});
+  x.fillStyle='#8a5a30';x.strokeStyle='#4a2d14';x.lineWidth=8;x.beginPath();x.roundRect?x.roundRect(190,90,700,170,28):x.rect(190,90,700,170);x.fill();x.stroke();
+  x.textAlign='center';x.fillStyle='#fff6e0';x.font='96px "Lilita One",system-ui';x.fillText(L_('Drehbrücke'),540,212);
+  x.fillStyle='#fff';x.font='300px "Lilita One",system-ui';x.shadowColor='rgba(0,0,0,.35)';x.shadowBlur=20;x.fillText(st.score,540,640);x.shadowBlur=0;
+  x.font='64px "Lilita One",system-ui';x.fillText(L_('Punkte'),540,730);
+  x.font='44px "Nunito",system-ui';x.fillText(L_((pname?pname+' · ':'')+'Skin: '+k.name+' · Bestwert: '+best),540,800);
+  x.font='40px "Lilita One",system-ui';x.fillStyle='#4a2d14';x.fillText(L_('Schaffst du mehr?')+'  nrplk.github.io/drehbruecke',540,1310);
+  return c;
+}
+let shareBlob=null;
+function openShare(){const c=makeShare();$('shareImg').src=c.toDataURL('image/png');c.toBlob(b=>{shareBlob=b});
+  $('over').classList.add('hidden');$('shareOv').classList.remove('hidden');sfx.click();
+  $('btnShareNow').style.display=(navigator.canShare&&window.File)?'':'none'}
+async function shareNow(){try{const f=new File([shareBlob],'drehbruecke.png',{type:'image/png'});if(navigator.canShare&&navigator.canShare({files:[f]}))await navigator.share({files:[f],text:L_('Schaffst du mehr? 🌉')+' https://nrplk.github.io/drehbruecke/'})}catch(e){}}
 
 // ---------- daily missions ----------
 const dkey=(()=>{const d=new Date();return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate()})();
@@ -749,6 +865,11 @@ function renderMissions(id){
 
 // ---------- music ----------
 const MUS={on:false,next:0,step:0};
+// Jingle Bells (James Lord Pierpont, 1857 – gemeinfrei), je Eintrag eine Achtelnote, 0 = Pause
+const JB=(()=>{const E=76,G=79,C=72,D=74,F=77,q=[];const n=(m,len)=>{q.push(m);for(let i=1;i<len;i++)q.push(0)};
+  [[E,2],[E,2],[E,4],[E,2],[E,2],[E,4],[E,2],[G,2],[C,3],[D,1],[E,8],[F,2],[F,2],[F,3],[F,1],[F,2],[E,2],[E,2],[E,1],[E,1],[E,2],[D,2],[D,2],[E,2],[D,4],[G,4]].forEach(a=>n(a[0],a[1]));return q})();
+function noiseAt(t,dur,vol,freq){if(muted||!AC)return;const n=Math.floor(AC.sampleRate*dur),b=AC.createBuffer(1,n,AC.sampleRate),d=b.getChannelData(0);for(let i=0;i<n;i++)d[i]=(Math.random()*2-1)*(1-i/n);
+  const src=AC.createBufferSource(),f=AC.createBiquadFilter(),g=AC.createGain();src.buffer=b;f.type='highpass';f.frequency.value=freq;g.gain.value=vol;src.connect(f);f.connect(g);g.connect(busOut('mus'));src.start(t)}
 const CHORDS=[[48,52,55,60],[45,48,52,57],[41,45,48,53],[43,47,50,55]];
 function mnote(m,t,dur,type,vol){
   if(muted||!AC)return;const o=AC.createOscillator(),g=AC.createGain();o.type=type;o.frequency.value=440*Math.pow(2,(m-69)/12);
@@ -758,11 +879,12 @@ function mnote(m,t,dur,type,vol){
 function musicTick(){
   if(!AC||!MUS.on||(st&&st.paused))return;
   if(MUS.next<AC.currentTime)MUS.next=AC.currentTime+0.05;
-  const bpm=88+Math.min(42,(st.combo||0)*7)+(st.storm>0?14:0),sp=60/bpm/2;
+  const bpm=88+Math.min(42,(st.combo||0)*7)+(st.storm>0?14:0)+(st.fever?16:0),sp=60/bpm/2;
   while(MUS.next<AC.currentTime+0.25){
     const bar=Math.floor(MUS.step/8)%4,s=MUS.step%8,ch=CHORDS[bar],t=MUS.next;
     if(s===0||s===4)mnote(ch[0]-12,t,sp*3.5,'triangle',0.08);
-    mnote(ch[[0,1,2,3,2,1,2,3][s]]+12,t,sp*0.9,'sine',0.03);
+    if(ADVENT){const M=JB[MUS.step%JB.length];if(M)mnote(M,t,sp*1.6,'triangle',0.05);if(s%2===0)noiseAt(t,0.04,0.05,7000)}
+    else mnote(ch[[0,1,2,3,2,1,2,3][s]]+12,t,sp*0.9,'sine',0.03);
     if(st.combo>=3&&s%2===1)mnote(ch[3]+24,t,sp*0.4,'triangle',0.012);
     MUS.next+=sp;MUS.step++;
   }
@@ -913,6 +1035,8 @@ function tap(){
   else if(ad<GOOD){st.combo=0;pts=2;text='GUT  +2';col='#b8ffb0';sfx.place()}
   else{st.combo=0;pts=1;text='+1';col='#ffffff';sfx.place()}
   if(st.buffs.double>0){pts*=2;text+=' ×2'}
+  if(st.combo>=10){if(!st.fever){st.fever=true;st.banner={text:'🔥 FIEBER! ×3',t:0};[523,659,784,1047,1319,1568].forEach((f,i)=>tone(f,0.18,'sawtooth',0.06,0,i*0.06));vib([40,30,40,30,80])}pts*=3;text+=' 🔥'}
+  else if(st.fever){st.fever=false}
   st.score+=pts;
   if(st.pulse&&ad>LIMIT&&!st.tut){st.score+=2;st.pops.push({x:seg.x2,y:seg.y2+52,text:'⚡ STEILPASS! +2',col:'#8ff0ff',t:-0.25});tone(700,0.18,'triangle',0.12,1.6)}
   st.pulse=false;st.pulseT=0;st.limCur=LIMIT;st.blockT=0;
@@ -1115,8 +1239,29 @@ $('btnMissM').onclick=()=>{renderMissions('missionsM');renderMissBadge&&renderMi
 [...document.querySelectorAll('#diffTabs .tab')].forEach(b=>b.onclick=()=>{diff=b.dataset.d;LS.set('diff',diff);renderDiff();sfx.click()});renderDiff();
 [...document.querySelectorAll('#modeTabs .tab')].forEach(b=>b.onclick=()=>{mode=b.dataset.m;LS.set('mode',mode);renderModes();sfx.click()});renderModes();
 let setFrom='menu';
-function openSet(from){setFrom=from;$(from).classList.add('hidden');$('setOv').classList.remove('hidden');$('setMus').value=settings.mus;$('setSfx').value=settings.sfx;$('setVib').checked=settings.vib}
-$('btnSet').onclick=()=>{audio();openSet('menu')};$('btnSetP').onclick=()=>openSet('pauseOv');
+function openSet(from){setFrom=from;$(from).classList.add('hidden');$('setOv').classList.remove('hidden');$('setMus').value=settings.mus;$('setSfx').value=settings.sfx;$('setVib').checked=settings.vib;$('setGfx').value=settings.gfx||'high';$('setLang').value=settings.lang||'de'}
+$('btnSet').onclick=()=>{audio();openSet('menu')};
+$('btnWheelM').onclick=openWheel;$('btnSpin').onclick=spin;$('btnWheelBack').onclick=()=>{$('wheelOv').classList.add('hidden');$('menu').classList.remove('hidden');renderWheelBadge()};
+$('btnShare').onclick=e=>{e.stopPropagation();openShare()};$('btnShareNow').onclick=shareNow;$('btnShareBack').onclick=()=>{$('shareOv').classList.add('hidden');$('over').classList.remove('hidden');st.overAt=performance.now()};
+renderWheelBadge();
+if(ADVENT){document.querySelector('.sign .tag').textContent='🎄 Frohe Weihnachten! 🎄';
+  if(!owned.includes('xmas')){owned.push('xmas');LS.set('owned',owned);setTimeout(()=>toast('🎄 Advents-Geschenk: Skin „Weihnachten“!'),1200)}}
+if(!CG_BUILD)setTimeout(showLogin,400);
+function applyGfx(){window.__gfxLow=settings.gfx==='low';resize();
+  if(window.__gfxLow){Object.defineProperty(ctx,'shadowBlur',{configurable:true,get(){return 0},set(){}})}else{delete ctx.shadowBlur}}
+const I18N=[["📊 Für Bestenliste & Statistik werden dein Name, Spielzeit und Punkte gespeichert – keine anderen Daten.", "📊 Your name, playtime and score are saved for the leaderboard & stats – nothing else."], ["Hier läuft später ein echtes Belohnungs-Video (z.&nbsp;B. AdMob Rewarded Ad).", "A real reward video will play here later."], ["Knapp über dem Boden (Anker-Zone) setzt du Anker – die sichern dich!", "Build just above the ground (anchor zone) to place anchors – they keep you safe!"], ["60 Sekunden – so viele Punkte wie möglich. Fehler kosten 5 Sekunden.", "60 seconds – as many points as possible. Mistakes cost 5 seconds."], ["Tippe, wenn der Balken im GELBEN Bereich ist – dann gibt's PERFEKT!", "Tap when the beam is in the YELLOW zone – that's a PERFECT!"], ["Neue Liste jeden Montag · nur Klassisch auf 🟡 Normal oder 🔴 Schwer", "New list every Monday · Classic on 🟡 Normal or 🔴 Hard only"], ["Endlos bauen, so weit du kommst. Zählt für die Online-Bestenliste.", "Build endlessly, as far as you can. Counts for the online leaderboard."], ["Mit dem gleichen Gruppen-Code seht ihr eure eigene Bestenliste.", "Everyone with the same group code shares their own leaderboard."], ["Super! Je waagrechter, desto mehr Punkte. Zu steil = Einsturz!", "Great! The flatter, the more points. Too steep = collapse!"], ["Keine Hindernisse, kein Einsturz. Einfach entspannt bauen.", "No obstacles, no collapse. Just relax and build."], ["Gib im Menü deinen Namen ein, damit du hier auftauchst.", "Enter your name in the profile to show up here."], ["Gerade keine Werbung verfügbar – versuch es später.", "No ad available right now – try again later."], ["Fast! Warte, bis der Balken im hellen Bereich ist.", "Almost! Wait until the beam is in the bright zone."], ["Komm jeden Tag wieder – die Belohnung wird größer!", "Come back every day – the reward gets bigger!"], ["Bild lange drücken → „Bild sichern“ oder teilen", "Long-press the image → “Save image” or share"], ["🛠 Admin-Runde – zählt nicht für die Bestenliste", "🛠 Admin run – doesn't count for the leaderboard"], ["Hier läuft später ein echtes Belohnungs-Video", "A real reward video will play here later"], ["🛠 Admin-Skin freigeschaltet (im Skin-Shop)", "🛠 Admin skin unlocked (in the skin shop)"], ["Heute schon gedreht – komm morgen wieder.", "Already spun today – come back tomorrow."], ["Online-Liste ist noch nicht eingerichtet.", "Online list is not set up yet."], ["🎄 Advents-Geschenk: Skin „Weihnachten“!", "🎄 Advent gift: “Christmas” skin!"], ["▶ Video ansehen &amp; weiterspielen", "▶ Watch video & continue"], ["Tage in Folge! Komm morgen wieder.", "days in a row! Come back tomorrow."], ["Keine Verbindung zur Online-Liste.", "No connection to the online list."], ["Tippe irgendwo für eine neue Runde", "Tap anywhere for a new round"], ["⚡ Timing – Bereich wird größer!", "⚡ Timing – zone gets bigger!"], ["Vom Schwarzen Loch verschluckt!", "Swallowed by the black hole!"], ["▶ Video ansehen & weiterspielen", "▶ Watch video & continue"], ["🛡 Schild für die nächste Runde", "🛡 Shield for your next run"], ["🥇 Platz 1 auf der Bestenliste!", "🥇 #1 on the leaderboard!"], ["🕳 immun gegen Schwarze Löcher", "🕳 immune to black holes"], ["Eine fremde Galaxie erreichen", "Reach an alien galaxy"], ["Noch keine Runden – leg los!", "No runs yet – let's go!"], ["Einmal am Tag gratis drehen!", "One free spin every day!"], ["Von einem UFO abgeschossen!", "Shot down by a UFO!"], ["unzerstörbar · zählt nicht", "indestructible · doesn't count"], ["Im Baum hängen geblieben!", "Stuck in a tree!"], ["100 Punkte in einer Runde", "100 points in one run"], ["200 Punkte in einer Runde", "200 points in one run"], ["Die Winter-Welt erreichen", "Reach the winter world"], ["Diese Woche noch niemand", " Nobody yet this week"], ["Spiele deine erste Runde", "Play your first run"], ["60 Punkte in einer Runde", "60 points in one run"], ["Gruppen-Code (optional)", "Group code (optional)"], ["⚠️ Achtung, Höhenlimit!", "⚠️ Careful, height limit!"], ["Tippen · Drehen · Bauen", "Tap · Spin · Build"], ["🌪 STURM ÜBERSTANDEN +5", "🌪 STORM SURVIVED +5"], ["🛡 Truhen-Schild aktiv!", "🛡 Chest shield active!"], ["⚔️ BOSS: MUTTERSCHIFF!", "⚔️ BOSS: MOTHERSHIP!"], ["🎄 Frohe Weihnachten! 🎄", "🎄 Merry Christmas! 🎄"], ["Einen Sturm überstehen", "Survive a storm"], ["5 Power-ups einsammeln", "Collect 5 power-ups"], ["✅ Aufgabe erledigt: +", "✅ Task done: +"], ["50× Perfekt insgesamt", "50× Perfect in total"], ["200 Münzen einsammeln", "Collect 200 coins"], ["Bis ins Weltall bauen", "Build up into space"], [" auf der Bestenliste", " on the leaderboard"], ["🏆 Neuer Rush-Rekord!", "🏆 New Rush record!"], ["🌪 Stürme überstanden", "🌪 Storms survived"], ["Alien erwischt dich!", "An alien got you!"], ["Hindernis getroffen!", "Hit an obstacle!"], ["🏆 BOSS BESIEGT! +15", "🏆 BOSS DEFEATED! +15"], ["🚀 Unendlich weiter!", "🚀 To infinity!"], ["Asteroid getroffen!", "Hit an asteroid!"], ["Vom Adler erwischt!", "Caught by the eagle!"], ["Schaffe 20× Perfekt", "Get 20× Perfect"], ["📋 Tägliche Aufgaben", "📋 Daily Tasks"], ["Niedrig (schneller)", "Low (faster)"], ["⏱ Zeit abgelaufen!", "⏱ Time's up!"], ["🪙 Münzen gesammelt", "🪙 Coins collected"], ["Vom Boss erwischt!", "Caught by the boss!"], ["Combo x6 erreichen", "Reach combo x6"], ["Combo x9 erreichen", "Reach combo x9"], ["Brückenbauer-Profi", "Bridge Pro"], ["Level 10 erreichen", "Reach level 10"], ["30 Minuten spielen", "Play for 30 minutes"], [" – sei der Erste!", " – be the first!"], [" in deiner Gruppe", " in your group"], ["☄️ METEORSCHAUER!", "☄️ METEOR SHOWER!"], ["🎮 Runden gespielt", "🎮 Runs played"], ["📸 Ergebnis teilen", "📸 Share result"], ["Schaffst du mehr?", "Can you beat it?"], ["Falsche Richtung!", "Wrong direction!"], ["Zeppelin gerammt!", "Rammed a zeppelin!"], ["Satellit gerammt!", "Rammed a satellite!"], ["50 Runden spielen", "Play 50 runs"], ["Einen Skin kaufen", "Buy a skin"], ["Erreiche Combo x5", "Reach combo x5"], ["Werbe-Platzhalter", "Ad placeholder"], [" bis zum Rekord!", " to beat your record!"], ["📅 Tages-Bonus: +", "📅 Daily bonus: +"], ["⚔️ BOSS: DRACHE!", "⚔️ BOSS: DRAGON!"], ["🪐 FREMDE GALAXIE", "🪐 ALIEN GALAXY"], ["🗓 Kalenderwoche ", "🗓 Week "], ["🎁 nur aus Truhen", "🎁 chests only"], ["Vogel getroffen!", "Hit a bird!"], ["20× Knapp vorbei", "20 near misses"], ["Sammle 15 Münzen", "Collect 15 coins"], ["-Skins schon da)", " skins already owned)"], ["Zeit pro Spieler", "Time per player"], ["Für Bestenliste", "For the leaderboard"], ["⏱ Rush-Rekord: ", "⏱ Rush record: "], ["⚓ Anker gesetzt", "⚓ Anchors placed"], ["⚡ STEILPASS! +2", "⚡ STEEP PASS! +2"], ["🏆 Neuer Rekord!", "🏆 New record!"], ["🌉 Balken gebaut", "🌉 Beams built"], ["🎁 Truhe öffnen!", "🎁 Open chest!"], ["📸 Dein Ergebnis", "📸 Your result"], ["Ballon gerammt!", "Rammed a balloon!"], ["Doppelte Punkte", "Double Points"], ["DOPPELTE PUNKTE", "DOUBLE POINTS"], ["10 Anker setzen", "Place 10 anchors"], ["3× Knapp vorbei", "3 near misses"], ["Spiele 5 Runden", "Play 5 runs"], ["👽 UFO-ANGRIFF!", "👽 UFO ATTACK!"], ["🌌 STRATOSPHÄRE", "🌌 STRATOSPHERE"], ["🌌 Stratosphäre", "🌌 Stratosphere"], ["🛡 SCHILD HÄLT!", "🛡 SHIELD HOLDS!"], ["🏆 Bester Score", "🏆 Best score"], ["😬 Knapp vorbei", "😬 Near misses"], ["Boden berührt!", "Hit the ground!"], ["Wintereinbruch", "Winter Is Here"], ["Andere Galaxie", "Another Galaxy"], ["freigeschaltet", "unlocked"], ["Schwarzes Loch", "Black Hole"], ["📅 Tages-Bonus", "📅 Daily Bonus"], ["⚓ ANKER HÄLT!", "⚓ ANCHOR HOLDS!"], ["⚓ Anker aktiv", "⚓ Anchor active"], ["NEUER REKORD!", "NEW RECORD!"], ["🔥 Beste Combo", "🔥 Best combo"], ["RAKETEN-SCHUB", "ROCKET BOOST"], ["Perfektionist", "Perfectionist"], ["Gut verankert", "Well Anchored"], ["Setze 3 Anker", "Place 3 anchors"], ["Münzen (alle ", "coins (all "], ["Kalenderwoche", "Week"], ["Einstellungen", "Settings"], ["Schwierigkeit", "Difficulty"], ["Partikel-Spur", "Particle trail"], ["⚓ Anker-Zone", "⚓ Anchor zone"], ["🔥 FIEBER! ×3", "🔥 FEVER! ×3"], ["🏆 Rekord in ", "🏆 Record in "], ["UNVERWUNDBAR", "INVINCIBLE"], ["Unverwundbar", "Invincible"], ["GRATIS-ANKER", "FREE ANCHOR"], ["Erste Brücke", "First Bridge"], ["Unaufhaltsam", "Unstoppable"], ["Dauerbrenner", "Evergreen"], ["Gruppen-Code", "Group code"], ["Spezial-Form", "Special shape"], ["Zuckerstange", "Candy Cane"], ["Schneeflocke", "Snowflake"], ["Sternenstaub", "Stardust"], ["⚓ ANKER  +5", "⚓ ANCHOR  +5"], ["⏱ Spielzeit", "⏱ Playtime"], ["🔒 ab Level ", "🔒 from level "], ["Ruhige Hand", "Steady Hand"], ["GROSSE ZONE", "BIG ZONE"], ["LOS GEHT'S!", "LET'S GO!"], ["Heißer Lauf", "Hot Streak"], ["Sparschwein", "Piggy Bank"], ["Bestenliste", "Leaderboard"], ["Silbertruhe", "Silver Chest"], ["Weihnachten", "Christmas"], [" bis Rekord", " to record"], ["Große Zone", "Big Zone"], ["Haarscharf", "Hair's Breadth"], ["Neuer Look", "New Look"], ["Ab ins All", "Into Space"], ["Aufsteiger", "Climber"], [" erreicht!", " reached!"], ["Gewonnen: ", "You won: "], ["Spielmodus", "Game Mode"], ["Gewöhnlich", "Common"], ["Regenbogen", "Rainbow"], ["Höhenlimit", "Height limit"], ["Drehbrücke", "Spin Bridge"], ["Bestwert: ", "Best: "], ["Nur noch ", " Only "], ["🪐 Galaxie", "🪐 Galaxy"], ["✨ WELTALL", "✨ OUTER SPACE"], ["✨ Weltall", "✨ Space"], ["Zu steil!", "Too steep!"], ["MÜNZREGEN", "COIN RAIN"], ["KNAPP! +3", "CLOSE ONE! +3"], ["❄️ WINTER", "❄️ WINTER"], ["❄️ Winter", "❄️ Winter"], ["Hunderter", "Century"], ["Sturmfest", "Stormproof"], ["Dein Name", "Your name"], ["Vibration", "Vibration"], ["Klassisch", "Classic"], ["Zeit-Rush", "Time Rush"], ["Glücksrad", "Lucky Wheel"], ["Statistik", "Stats"], ["Hauptmenü", "Main menu"], ["Holztruhe", "Wooden Chest"], ["Goldtruhe", "Gold Chest"], ["Gestreift", "Striped"], ["Klassisch", "Classic"], ["Spielzeit", "Playtime"], ["⭐ Level ", "⭐ Level "], ["🏆 Platz ", "🏆 Rank "], [" öffnen!", " open!"], ["Zu hoch!", "Too high!"], ["🦅 ADLER!", "🦅 EAGLE!"], ["🌪 STURM!", "🌪 STORM!"], ["🌪 Sturm ", "🌪 Storm "], ["Zeitlupe", "Slow Motion"], ["ZEITLUPE", "SLOW MOTION"], ["Ausdauer", "Endurance"], ["Erfolg: ", "Achievement: "], ["Bonus-XP", "bonus XP"], ["Aufgaben", "Tasks"], ["Zum Menü", "Main menu"], ["Legendär", "Legendary"], ["Mythisch", "Mythic"], ["Animiert", "Animated"], ["Leuchtet", "Glows"], ["Kristall", "Crystal"], ["Schatten", "Shadow"], ["Herzchen", "Hearts"], ["Bestwert", "Best"], ["Schritt ", "Step "], ["🚀 Höhe ", "🚀 Height "], ["GUT  +2", "GOOD  +2"], ["PERFEKT", "PERFECT"], ["🌅 ABEND", "🌅 EVENING"], ["🌙 NACHT", "🌙 NIGHT"], ["🌅 Abend", "🌅 Evening"], ["🌙 Nacht", "🌙 Night"], ["Sammler", "Collector"], [" Münzen", " coins"], ["Sprache", "Language"], ["Effekte", "Effects"], ["Erfolge", "Achievements"], ["Abholen", "Claim"], ["Drehen!", "Spin!"], ["Spielen", "Play"], ["Gewählt", "Selected"], ["Smaragd", "Emerald"], ["Galaxie", "Galaxy"], ["Diamant", "Diamond"], ["Spieler", "Players"], ["Combo x", "Combo x"], ["SCHILD", "SHIELD"], ["☀️ TAG", "☀️ DAY"], ["Grafik", "Graphics"], ["Leicht", "Easy"], ["Schwer", "Hard"], ["Profil", "Profile"], ["Zurück", "Back"], ["Fertig", "Done"], ["Weiter", "Resume"], ["Teilen", "Share"], ["Super!", "Great!"], ["Wählen", "Select"], ["Selten", "Rare"], ["Episch", "Epic"], ["Bambus", "Bamboo"], ["Drache", "Dragon"], ["Wasser", "Water"], ["Phönix", "Phoenix"], ["Prisma", "Prism"], ["Gruppe", "Group"], ["gesamt", "total"], ["Punkte", "points"], ["REKORD", "RECORD"], ["Runden", "Runs"], ["Schild", "Shield"], [" von ", " of "], ["Musik", "Music"], ["Truhe", "Chest"], ["Stahl", "Steel"], ["Stein", "Stone"], ["Kette", "Chain"], ["Ranke", "Vine"], ["Wolke", "Cloud"], ["Blitz", "Lightning"], ["Best ", "Best "], ["Meine", "Mine"], ["Noch ", "Only "], ["Punkt", "point"], ["Hoch", "High"], ["Holz", "Wood"], ["Seil", "Rope"], ["Alle", "All"], ["Tag ", "Day "], ["Skin", "Skin"], [" in ", " in "], ["Nur ", "Only "], ["Eis", "Ice"]];
+function L_(t){if(t==null)return t;t=String(t);if(!settings||settings.lang!=='en')return t;for(const p of I18N)if(t.indexOf(p[0])>=0)t=t.split(p[0]).join(p[1]);return t}
+let i18nBusy=false;
+function trNode(n){if(n.nodeType===3){if(!/[A-Za-zÄÖÜäöüß]/.test(n.nodeValue))return;if(n.__tr!==n.nodeValue){n.__de=n.nodeValue}const v=settings.lang==='en'?L_(n.__de):n.__de;if(n.nodeValue!==v){n.nodeValue=v}n.__tr=v}
+  else if(n.nodeType===1){if(n.tagName==='SCRIPT'||n.tagName==='STYLE')return;if(n.placeholder!==undefined&&n.getAttribute('placeholder')){if(!n.__dep)n.__dep=n.getAttribute('placeholder');n.setAttribute('placeholder',settings.lang==='en'?L_(n.__dep):n.__dep)}
+    if(n.tagName==='OPTION'){}for(const c of n.childNodes)trNode(c)}}
+function applyLang(){i18nBusy=true;trNode(document.body);i18nBusy=false;document.documentElement.lang=settings.lang;if($('wheelOv')&&!$('wheelOv').classList.contains('hidden'))drawWheel();if($('btnMode'))renderChip()}
+new MutationObserver(ms=>{if(i18nBusy)return;i18nBusy=true;for(const m of ms){if(m.type==='characterData')trNode(m.target);else m.addedNodes.forEach(trNode)}i18nBusy=false}).observe(document.body,{childList:true,subtree:true,characterData:true});
+{const f=ctx.fillText.bind(ctx),sT=ctx.strokeText.bind(ctx),mT=ctx.measureText.bind(ctx);ctx.fillText=(t,x,y,m)=>m===undefined?f(L_(t),x,y):f(L_(t),x,y,m);ctx.strokeText=(t,x,y,m)=>m===undefined?sT(L_(t),x,y):sT(L_(t),x,y,m);ctx.measureText=t=>mT(L_(t))}
+settings.gfx=settings.gfx||'high';settings.lang=settings.lang||(CG_BUILD||!/^de/i.test(navigator.language||'de')?'en':'de');applyGfx();
+applyLang();
+$('setGfx').onchange=e=>{settings.gfx=e.target.value;LS.set('settings',settings);applyGfx()};
+$('setLang').onchange=e=>{settings.lang=e.target.value;LS.set('settings',settings);applyLang()};$('btnSetP').onclick=()=>openSet('pauseOv');
 $('btnSetBack').onclick=()=>{$('setOv').classList.add('hidden');$(setFrom).classList.remove('hidden')};
 $('setMus').oninput=e=>{settings.mus=+e.target.value;LS.set('settings',settings);if(AC)busOut('mus')};
 $('setSfx').oninput=e=>{settings.sfx=+e.target.value;LS.set('settings',settings);if(AC){busOut('sfx');sfx.click()}};
@@ -1127,8 +1272,8 @@ $('nameIn').addEventListener('input',e=>{pname=e.target.value.trim().slice(0,12)
   if(pname.toLowerCase()==='admin'){if(!LS.get('adminSeen',false)){LS.set('adminSeen',true);toast('🛠 Admin-Skin freigeschaltet (im Skin-Shop)')}}
   else if(skinId==='admin'){skinId='wood';LS.set('skin',skinId);applySkinTop()}});
 $('btnBoardM').onclick=()=>openBoard('menu');
-$('btnChest').onclick=e=>{e.stopPropagation();openChest()};
-$('btnChestOk').onclick=()=>{$('chestOv').classList.add('hidden');$('over').classList.remove('hidden');st.overAt=performance.now()};
+$('btnChest').onclick=e=>{e.stopPropagation();openChest('over')};
+$('btnChestOk').onclick=()=>{$('chestOv').classList.add('hidden');$(chestRet).classList.remove('hidden');st.overAt=performance.now();if(chestRet==='menu'){$('menuCoins').textContent='🪙 '+coins;$('lvlM').innerHTML=lvlHTML()}};
 $('lvlM').innerHTML=lvlHTML();
 $('btnStatsM').onclick=()=>openOv('statsOv','menu',renderStats);
 $('btnAchM').onclick=()=>openOv('achOv','menu',renderAch);
@@ -1218,7 +1363,7 @@ function update(dt){
   st.shake=Math.max(0,st.shake-dt*40);
   for(const p of st.pops)p.t+=dt;
   st.pops=st.pops.filter(p=>p.t<1);
-  {const k=skin();if(k.fx&&st.phase!=='menu'){const segs=st.segs.slice(-10);
+  {const k=skin();if(k.fx&&st.phase!=='menu'&&!window.__gfxLow){const segs=st.segs.slice(-10);
     for(const g of segs){if(Math.random()>dt*2.2)continue;const t=Math.random(),x=g.x1+(g.x2-g.x1)*t,y=g.y1+(g.y2-g.y1)*t;
       const fx=k.fx,P={x,y,t:0,vx:rnd(-20,20),vy:0,col:'#fff'};
       if(fx==='fire'){P.up=1;P.vy=rnd(40,90);P.col=['#ffd166','#ff7a1a','#ff3d00'][Math.floor(Math.random()*3)]}
@@ -1293,7 +1438,7 @@ function cloud(x,y,s,a){
   for(const p of puffs)dot(x+p[0]*40*s,y+p[1]*40*s,p[2]*40*s,st.storm>0?'#9aa3b5':P.cloud);
   ctx.globalAlpha=1;
 }
-function drawClouds(){
+function drawClouds(){if(window.__gfxLow&&st.t%1<0)return;
   const off=st.cam.x*0.18+st.t*7+st.stormOff,span=320,w=W/S;
   for(let i=Math.floor(off/span)-1;i<=Math.floor((off+w)/span)+1;i++){
     const x=(i*span+hash(i)*160-off)*S,y=H*(0.08+hash(i+50)*0.32),s=S*(0.7+hash(i+99)*0.7);
@@ -1330,6 +1475,7 @@ function drawGround(){
   ctx.fillStyle=d;ctx.fillRect(0,g,W,H-g);
   const gr=ctx.createLinearGradient(0,g-6*S,0,g+16*S);gr.addColorStop(0,P.gt);gr.addColorStop(1,P.gb);
   ctx.fillStyle=gr;ctx.fillRect(0,g-4*S,W,20*S);
+  if(window.__gfxLow)return;
   ctx.strokeStyle=P.blade;ctx.lineWidth=Math.max(1,1.6*S);ctx.beginPath();
   const sp=9,off=st.cam.x,wind=st.storm>0?6:1.5;
   for(let i=Math.floor((off-OX()/S)/sp);i<=Math.floor((off+(W-OX())/S)/sp)+1;i++){
@@ -1343,7 +1489,7 @@ function drawGround(){
   }
 }
 function drawWeather(){
-  const sf=P.snow*clamp(1-st.camY/450,0,1);
+  const sf=Math.max(P.snow,ADVENT?0.6:0)*clamp(1-st.camY/450,0,1);
   if(sf>0.02){ctx.globalAlpha=sf*0.85;
     for(let i=0;i<70;i++){const sp=30+hash(i+3)*40,x=((hash(i)*W+st.t*(12+hash(i+1)*20)*(st.storm>0?6:1))%W+W)%W,y=(hash(i+2)*H+st.t*sp*S)%H;dot(x,y,1.2+hash(i+4)*2,'#ffffff')}
     ctx.globalAlpha=1}
@@ -1551,6 +1697,8 @@ function draw(){
   for(const s of st.segs)bolt(sx(s.x1),sy(s.y1));
   for(const c of st.coins){
     if(c.taken)continue;const x=sx(c.x),y=sy(c.y+Math.sin(st.t*2+c.ph)*4);if(x<-30||x>W+30)continue;
+    if(ADVENT){const r=12*S;ctx.fillStyle=c.ph%2?'#e53935':'#2e7d32';ctx.fillRect(x-r,y-r*0.8,r*2,r*1.8);ctx.fillStyle='#ffd23a';ctx.fillRect(x-r*0.18,y-r*0.8,r*0.36,r*1.8);ctx.fillRect(x-r,y-r*0.05,r*2,r*0.3);
+      ctx.beginPath();ctx.ellipse(x-r*0.35,y-r*1,r*0.35,r*0.22,-0.4,0,Math.PI*2);ctx.ellipse(x+r*0.35,y-r*1,r*0.35,r*0.22,0.4,0,Math.PI*2);ctx.fill();continue}
     const r=13*S,sw=Math.abs(Math.cos(st.t*3+c.ph));
     ctx.shadowColor='#ffd23a';ctx.shadowBlur=10;
     ctx.fillStyle='#d99a12';ctx.beginPath();ctx.ellipse(x,y,r*Math.max(0.15,sw),r,0,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
@@ -1607,6 +1755,8 @@ function draw(){
     if(st.tut===1){const px=sx(st.px),py=sy(st.py),R=L*S,bob=Math.sin(st.t*6)*5;ctx.fillStyle='#ffd23a';ctx.beginPath();
       ctx.moveTo(px+R+16*S+bob,py);ctx.lineTo(px+R+34*S+bob,py-10*S);ctx.lineTo(px+R+34*S+bob,py+10*S);ctx.fill()}
   }
+  if(st.fever){const p=0.5+0.5*Math.sin(st.t*10),fg=ctx.createRadialGradient(W/2,H/2,Math.min(W,H)*0.3,W/2,H/2,Math.max(W,H)*0.75);
+    fg.addColorStop(0,'rgba(255,120,0,0)');fg.addColorStop(1,'rgba(255,90,0,'+(0.3+0.2*p)+')');ctx.fillStyle=fg;ctx.fillRect(0,0,W,H)}
   if(st.buffs.inv>0){const p=0.5+0.5*Math.sin(st.t*8),gv=ctx.createRadialGradient(W/2,H/2,Math.min(W,H)*0.35,W/2,H/2,Math.max(W,H)*0.75);
     gv.addColorStop(0,'rgba(255,210,60,0)');gv.addColorStop(1,'rgba(255,200,40,'+(0.25+0.2*p)+')');ctx.fillStyle=gv;ctx.fillRect(0,0,W,H)}
   for(const f of st.flys){const k=f.t/0.45,e=k*k*(3-2*k),tx=W-60,ty=52,x=f.x+(tx-f.x)*e,y=f.y+(ty-f.y)*e-Math.sin(k*Math.PI)*60;
@@ -1621,7 +1771,7 @@ function loop(now){
 }
 requestAnimationFrame(loop);
 if(CG_BUILD){
-  $('btnProf').style.display='none';$('tabOnline').style.display='none';$('privNote').textContent='';
+  $('btnProf').style.display='none';$('tabOnline').style.display='none';$('btnShare').style.display='none';$('privNote').textContent='';
   (async()=>{try{window.CrazyGames&&window.CrazyGames.SDK.game.loadingStart()}catch(e){}
     await cgInit();cg(S=>S.game.loadingStop());start()})();
 }
