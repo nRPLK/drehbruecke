@@ -75,6 +75,7 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
       <label>Videos pro Runde <input type="number" id="inRate" value="0.4" min="0" step="0.1" style="width:70px;font:inherit;padding:6px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink)"></label>
     </div>
     <div class="tiles" id="revTiles" style="margin-bottom:0"></div>
+    <div class="note" id="adNote"></div>
     <div class="note">Nur eine grobe Schätzung: Runden im Zeitraum × Videos pro Runde × Betrag pro 1.000 Videos. Echte Werte hängen von Land, Gerät, Jahreszeit und Werbenetzwerk ab und schwanken stark. Zen-Runden zählen nicht (dort gibt es keine Werbung).</div>
   </div>
   <div class="grid2">
@@ -115,7 +116,7 @@ const esc=x=>String(x).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',
 function demoData(){
   const names=[['a1','Niklas','familie'],['b2','Bruder','familie'],['c3','Max','4abeli'],['d4','Lena','4abeli'],['e5','Tim','4abeli'],['f6','','']],out=[],now=Date.now();
   for(let i=0;i<260;i++){const p=names[Math.floor(Math.random()*names.length)],t=now-Math.random()*20*864e5;
-    out.push({u:p[0],n:p[1],g:p[2],m:Math.random()<0.75?'classic':Math.random()<0.6?'rush':'zen',d:Math.random()<0.65?'normal':Math.random()<0.5?'hard':'easy',s:Math.floor(Math.random()*180),dur:20+Math.floor(Math.random()*240),t})}
+    out.push({u:p[0],n:p[1],g:p[2],m:Math.random()<0.75?'classic':Math.random()<0.6?'rush':'zen',d:Math.random()<0.65?'normal':Math.random()<0.5?'hard':'easy',s:Math.floor(Math.random()*180),a:Math.random()<0.5?0:1+Math.floor(Math.random()*3),r:Math.floor(Math.random()*2),dur:20+Math.floor(Math.random()*240),t})}
   return out;
 }
 
@@ -150,6 +151,7 @@ function bars(svg,labels,vals,fmt,color,tipFmt){
   svg.querySelectorAll('rect[data-i]').forEach(r=>{const i=+r.dataset.i;r.onmousemove=e=>tooltip(e,tipFmt(i));r.onmouseleave=()=>tooltip(null);r.ontouchstart=e=>tooltip(e.touches[0],tipFmt(i))});
 }
 
+let rateTouched=false;
 function render(){
   const S=filtered();
   // groups
@@ -157,11 +159,14 @@ function render(){
   sel.innerHTML='<option value="">Alle Gruppen</option>'+groups.map(g=>`<option value="${esc(g)}">👥 ${esc(g)}</option>`).join('');sel.value=cur;
   // per player
   const P={};for(const e of S.slice().sort((a,b)=>a.t-b.t)){const p=P[e.u]||(P[e.u]={u:e.u,n:'',g:'',runs:0,time:0,best:0,last:0});
-    p.runs++;p.time+=e.dur;if(e.m!=='zen')p.best=Math.max(p.best,e.s);p.last=Math.max(p.last,e.t);if(e.n)p.n=e.n;if(e.g)p.g=e.g}
+    p.runs++;p.time+=e.dur;p.ads=(p.ads||0)+(e.a||0);if(e.m!=='zen')p.best=Math.max(p.best,e.s);p.last=Math.max(p.last,e.t);if(e.n)p.n=e.n;if(e.g)p.g=e.g}
   const players=Object.values(P).sort((a,b)=>b.time-a.time);
   const tot=S.reduce((a,e)=>a+e.dur,0),today=dayKey(Date.now());
   const activeToday=new Set(S.filter(e=>dayKey(e.t)===today).map(e=>e.u)).size;
-  const tiles=[['👥 Spieler',players.length],['🎮 Runden',S.length],['⏱ Spielzeit gesamt',fmtDur(tot)],['⌀ Rundenlänge',S.length?fmtDur(tot/S.length):'–'],['⌀ Zeit pro Spieler',players.length?fmtDur(tot/players.length):'–'],['🔥 Heute aktiv',activeToday],['🏆 Bester Score',Math.max(0,...S.filter(e=>e.m!=='zen').map(e=>e.s))]];
+  const AD=S.filter(e=>typeof e.a==='number'&&e.m!=='zen'),adSum=AD.reduce((x,e)=>x+e.a,0),adAvg=AD.length?adSum/AD.length:0,revAvg=AD.length?AD.reduce((x,e)=>x+(e.r||0),0)/AD.length:0;
+  const adShare=AD.length?AD.filter(e=>e.a>0).length/AD.length:0;
+  if(AD.length&&!rateTouched)$('inRate').value=adAvg.toFixed(2);
+  const tiles=[['👥 Spieler',players.length],['🎮 Runden',S.length],['⏱ Spielzeit gesamt',fmtDur(tot)],['⌀ Rundenlänge',S.length?fmtDur(tot/S.length):'–'],['⌀ Zeit pro Spieler',players.length?fmtDur(tot/players.length):'–'],['🔥 Heute aktiv',activeToday],['🏆 Bester Score',Math.max(0,...S.filter(e=>e.m!=='zen').map(e=>e.s))],['📺 Videos gesamt',adSum],['📺 ⌀ Videos pro Runde',AD.length?adAvg.toFixed(2).replace('.',','):'–'],['📺 Runden mit Video',AD.length?Math.round(adShare*100)+' %':'–']];
   $('tiles').innerHTML=tiles.map(t=>`<div class="tile"><div class="k">${t[0]}</div><div class="v">${t[1]}</div></div>`).join('');
   // revenue estimate
   {const ecpm=+$('inEcpm').value||0,rate=+$('inRate').value||0,runs=S.filter(e=>e.m!=='zen').length;
@@ -169,6 +174,7 @@ function render(){
    const eur=v=>v<10?v.toFixed(2).replace('.',',')+' €':Math.round(v).toLocaleString('de-AT')+' €';
    const per=runs*rate/1000*ecpm,month=per/span*30,perPlayer=players.length?month/players.length:0;
    const rt=[['🎬 Videos im Zeitraum',Math.round(runs*rate)],['💶 Einnahmen im Zeitraum',eur(per)],['📅 Hochgerechnet pro Monat',eur(month)],['👤 pro Spieler & Monat',eur(perPlayer)],['🚀 bei 100 Spielern / Monat',eur(perPlayer*100)],['🌍 bei 1.000 Spielern / Monat',eur(perPlayer*1000)]];
+   $('adNote').innerHTML=AD.length?`Gemessen: <b>${adAvg.toFixed(2).replace('.',',')}</b> Videos pro Runde (${adSum} Videos in ${AD.length} Runden) · ⌀ <b>${revAvg.toFixed(2).replace('.',',')}</b>× weitergespielt pro Runde. „Videos pro Runde“ wird automatisch mit dem gemessenen Wert gefüllt.`:'Videos werden ab der neuen Spielversion gezählt – ältere Runden haben noch keinen Wert.';
    $('revTiles').innerHTML=rt.map(t=>`<div class="tile"><div class="k">${t[0]}</div><div class="v">${t[1]}</div></div>`).join('');}
   // daily series
   const days=range===1?1:range||Math.max(1,Math.min(60,Math.ceil((Date.now()-Math.min(Date.now(),...S.map(e=>e.t)))/864e5)+1));
@@ -193,16 +199,16 @@ function render(){
   $('shares').innerHTML=share(MODES,'m')+'<div style="height:10px"></div>'+share(DIFFS,'d');
   // players table
   const ago=t=>{const m=Math.round((Date.now()-t)/60000);return m<60?'vor '+m+' min':m<1440?'vor '+Math.round(m/60)+' h':'vor '+Math.round(m/1440)+' Tagen'};
-  $('tblPlayers').innerHTML='<tr><th>Name</th><th>Gruppe</th><th class="num">Runden</th><th class="num">Spielzeit</th><th class="num">⌀ Runde</th><th class="num">Bester</th><th>Zuletzt</th></tr>'+
-    players.map(p=>`<tr><td>${p.n?esc(p.n):'<span style="color:var(--muted)">ohne Namen</span>'}</td><td>${p.g?'<span class="badge">'+esc(p.g)+'</span>':''}</td><td class="num">${p.runs}</td><td class="num">${fmtDur(p.time)}</td><td class="num">${fmtDur(p.time/p.runs)}</td><td class="num">${p.best}</td><td>${ago(p.last)}</td></tr>`).join('');
+  $('tblPlayers').innerHTML='<tr><th>Name</th><th>Gruppe</th><th class="num">Runden</th><th class="num">Spielzeit</th><th class="num">⌀ Runde</th><th class="num">Bester</th><th class="num">📺</th><th>Zuletzt</th></tr>'+
+    players.map(p=>`<tr><td>${p.n?esc(p.n):'<span style="color:var(--muted)">ohne Namen</span>'}</td><td>${p.g?'<span class="badge">'+esc(p.g)+'</span>':''}</td><td class="num">${p.runs}</td><td class="num">${fmtDur(p.time)}</td><td class="num">${fmtDur(p.time/p.runs)}</td><td class="num">${p.best}</td><td class="num">${p.ads||0}</td><td>${ago(p.last)}</td></tr>`).join('');
   const rec=S.slice().sort((a,b)=>b.t-a.t).slice(0,25);
-  $('tblRecent').innerHTML='<tr><th>Wann</th><th>Name</th><th>Modus</th><th>Stufe</th><th class="num">Punkte</th><th class="num">Dauer</th></tr>'+
-    rec.map(e=>`<tr><td>${new Date(e.t).toLocaleString('de-AT',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</td><td>${e.n?esc(e.n):'–'}</td><td>${MODES[e.m]||e.m}</td><td>${DIFFS[e.d]||''}</td><td class="num">${e.s}</td><td class="num">${fmtDur(e.dur)}</td></tr>`).join('');
+  $('tblRecent').innerHTML='<tr><th>Wann</th><th>Name</th><th>Modus</th><th>Stufe</th><th class="num">Punkte</th><th class="num">📺</th><th class="num">Dauer</th></tr>'+
+    rec.map(e=>`<tr><td>${new Date(e.t).toLocaleString('de-AT',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</td><td>${e.n?esc(e.n):'–'}</td><td>${MODES[e.m]||e.m}</td><td>${DIFFS[e.d]||''}</td><td class="num">${e.s}</td><td class="num">${typeof e.a==='number'?e.a:'–'}</td><td class="num">${fmtDur(e.dur)}</td></tr>`).join('');
 }
 
 document.querySelectorAll('.filters button[data-r]').forEach(b=>b.onclick=()=>{document.querySelectorAll('.filters button[data-r]').forEach(x=>x.classList.remove('on'));b.classList.add('on');range=+b.dataset.r;render()});
 $('grpSel').onchange=e=>{grp=e.target.value;render()};
-$('inEcpm').oninput=()=>render();$('inRate').oninput=()=>render();
+$('inEcpm').oninput=()=>render();$('inRate').oninput=()=>{rateTouched=true;render()};
 addEventListener('resize',()=>{if(all.length)render()});
 
 if(DEMO){$('login').classList.add('hidden');$('app').classList.remove('hidden');$('who').textContent='Demo mit Beispieldaten';$('btnReload').onclick=()=>load();load()}

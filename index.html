@@ -637,9 +637,10 @@ function hitObs(s,o){
 let devId=LS.get('dev','');if(!devId){devId=Math.random().toString(36).slice(2,10);LS.set('dev',devId)}
 function logSession(){
   if(CG_BUILD)return;
-  if(!st||!st.startedAt||st.logged)return;st.logged=true;
-  const dur=Math.round(Math.min(7199,(performance.now()-st.startedAt)/1000));if(dur<3)return;
-  const body={u:devId,n:pname||'',g:group||'',m:st.mode||'classic',d:st.diff||'normal',k:skinId,s:st.score|0,dur,t:{'.sv':'timestamp'}};
+  if(!st||!st.startedAt||st.logged||st.phase==='menu')return;st.logged=true;
+  let acc=st.playAcc||0;if(st.phase!=='over')acc+=performance.now()-st.startedAt;
+  const dur=Math.round(Math.min(7199,acc/1000));if(dur<3)return;
+  const body={u:devId,n:pname||'',g:group||'',m:st.mode||'classic',d:st.diff||'normal',k:skinId,s:st.score|0,dur,a:st.ads||0,r:st.revives||0,t:{'.sv':'timestamp'}};
   resolveDB().then(db=>{if(!db)return;fetch(db+'/sessions.json',{method:'POST',keepalive:true,headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).catch(()=>{})});
 }
 
@@ -1208,7 +1209,7 @@ function collapse(seg,reason){
 }
 
 function showOver(){
-  logSession();cg(S=>S.game.gameplayStop());
+  st.playAcc=(st.playAcc||0)+(performance.now()-st.startedAt);cg(S=>S.game.gameplayStop());
   if(CG_BUILD&&CG&&st.score>=10)setTimeout(()=>cgAd('midgame'),400);
   st.phase='over';st.overAt=performance.now();saveStats();
   $('prog').classList.add('hidden');
@@ -1259,7 +1260,7 @@ function duelPay(){const paid=LS.get('duelPaid',[]);let got=0;
   LS.set('duelPaid',paid.slice(-300))}
 function duelBadge(){const n=(duelList||[]).filter(e=>{const m=duelMine(e);return !m.iA&&!m.done&&Date.now()-(e.t||0)<7*864e5}).length;const b=$('duelBadge');b.textContent=n;b.classList.toggle('on',n>0)}
 function duelRefresh(){duelLoad().then(()=>{duelBadge();if(!$('duelOv').classList.contains('hidden'))renderDuels()})}
-function startDuel(ctx){duelCtx=ctx;['duelOv','over','menu'].forEach(i=>$(i).classList.add('hidden'));['hud','prog','chestOv','timer'].forEach(i=>$(i).classList.add('hidden'));start()}
+function startDuel(ctx){if(st&&st.phase==='over')logSession();duelCtx=ctx;['duelOv','over','menu'].forEach(i=>$(i).classList.add('hidden'));['hud','prog','chestOv','timer'].forEach(i=>$(i).classList.add('hidden'));start()}
 function newDuel(opp){opp=(opp||'').trim().slice(0,12);
   if(!pname){toast('👤 Gib zuerst im Profil deinen Namen ein!');return}
   if(!opp||lc(opp)===lc(pname)){toast('Wähle einen Gegner aus.');return}
@@ -1351,6 +1352,7 @@ function doubleCoins(){watchAd(()=>{const c=st.coinsRun;coins+=c;st.coinsRun+=c;
   $('overCoins').textContent='🪙 +'+st.coinsRun+'  ·  gesamt '+coins;setDbl();$('over').classList.remove('hidden');st.overAt=performance.now();sfx.record();toast('🪙 +'+c+' Münzen!');vib([30,40,60])})}
 
 function start(){
+  if(st&&st.phase==='over')logSession();
   const md=duelCtx?'duel':mode;
   cg(S=>S.game.gameplayStart());
   audio();MUS.on=true;
@@ -1433,6 +1435,7 @@ $('over').addEventListener('pointerdown',e=>{if(e.target.closest('button'))retur
 $('mute').onclick=e=>{e.stopPropagation();muted=!muted;LS.set('muted',muted);audio();updHud()};
 $('btnStart').onclick=()=>{duelCtx=null;start()};$('btnDuelM').onclick=()=>openDuels('menu');$('btnDuelBack').onclick=()=>{duelBadge();swapOv('duelOv','menu')};$('btnDuelGo').onclick=()=>newDuel($('duelIn').value);
 $('btnDuelO').onclick=e=>{e.stopPropagation();const c=duelLast;if(c&&c.id){newDuel(c.opp)}else{['over','hud','prog','timer'].forEach(i=>$(i).classList.add('hidden'));newGame('menu');openDuels('menu')}};
+addEventListener('pagehide',()=>{if(st&&st.phase==='over')logSession()});document.addEventListener('visibilitychange',()=>{if(document.hidden&&st&&st.phase==='over')logSession()});
 if(CG_BUILD)$('btnDuelM').classList.add('hidden');else setTimeout(duelRefresh,1500);$('btnDbl').onclick=e=>{e.stopPropagation();audio();doubleCoins()};$('btnRevive').onclick=e=>{e.stopPropagation();audio();revive()};
 $('menuBest').textContent=best?'Bestwert: '+best:'';
 $('menuCoins').textContent='🪙 '+coins;
@@ -1503,7 +1506,7 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden&&st.phase==
 $('tabLocal').onclick=()=>setTab('local');$('tabOnline').onclick=()=>setTab('online');$('tabDaily').onclick=()=>setTab('daily');
 $('btnBoardO').onclick=e=>{e.stopPropagation();openBoard('over')};
 $('btnBoardBack').onclick=()=>{$('board').classList.add('hidden');$(boardFrom).classList.remove('hidden')};
-$('btnHome').onclick=e=>{e.stopPropagation();sfx.click();applySkinTop();
+$('btnHome').onclick=e=>{e.stopPropagation();sfx.click();logSession();applySkinTop();
   ['over','hud','prog','chestOv','timer'].forEach(i=>$(i).classList.add('hidden'));newGame('menu');
   $('menuCoins').textContent='🪙 '+coins;$('menuBest').textContent=best?'Bestwert: '+best:'';renderMissions('missionsM');duelRefresh();renderMissBadge&&renderMissBadge();$('lvlM').innerHTML=lvlHTML();$('menu').classList.remove('hidden')};
 cv.addEventListener('pointerdown',e=>{e.preventDefault();audio();tap()});
