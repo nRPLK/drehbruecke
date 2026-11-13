@@ -69,6 +69,14 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
     <button id="btnReload">↻ Aktualisieren</button>
   </div>
   <div class="tiles" id="tiles"></div>
+  <div class="card" style="margin-bottom:16px"><h2>💰 Mögliche Einnahmen (Schätzung mit Belohnungs-Videos)</h2>
+    <div class="filters" style="margin:4px 0 10px">
+      <label>€ pro 1.000 Videos <input type="number" id="inEcpm" value="8" min="0" step="0.5" style="width:70px;font:inherit;padding:6px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink)"></label>
+      <label>Videos pro Runde <input type="number" id="inRate" value="0.4" min="0" step="0.1" style="width:70px;font:inherit;padding:6px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink)"></label>
+    </div>
+    <div class="tiles" id="revTiles" style="margin-bottom:0"></div>
+    <div class="note">Nur eine grobe Schätzung: Runden im Zeitraum × Videos pro Runde × Betrag pro 1.000 Videos. Echte Werte hängen von Land, Gerät, Jahreszeit und Werbenetzwerk ab und schwanken stark. Zen-Runden zählen nicht (dort gibt es keine Werbung).</div>
+  </div>
   <div class="grid2">
     <div class="card"><h2>Spielzeit pro Tag (Minuten)</h2><svg class="chart" id="chTime"></svg></div>
     <div class="card"><h2>Aktive Spieler pro Tag</h2><svg class="chart" id="chPlayers"></svg></div>
@@ -153,6 +161,13 @@ function render(){
   const activeToday=new Set(S.filter(e=>dayKey(e.t)===today).map(e=>e.u)).size;
   const tiles=[['👥 Spieler',players.length],['🎮 Runden',S.length],['⏱ Spielzeit gesamt',fmtDur(tot)],['⌀ Rundenlänge',S.length?fmtDur(tot/S.length):'–'],['⌀ Zeit pro Spieler',players.length?fmtDur(tot/players.length):'–'],['🔥 Heute aktiv',activeToday],['🏆 Bester Score',Math.max(0,...S.filter(e=>e.m!=='zen').map(e=>e.s))]];
   $('tiles').innerHTML=tiles.map(t=>`<div class="tile"><div class="k">${t[0]}</div><div class="v">${t[1]}</div></div>`).join('');
+  // revenue estimate
+  {const ecpm=+$('inEcpm').value||0,rate=+$('inRate').value||0,runs=S.filter(e=>e.m!=='zen').length;
+   const span=range===1?1:range||Math.max(1,(Date.now()-Math.min(Date.now(),...S.map(e=>e.t)))/864e5);
+   const eur=v=>v<10?v.toFixed(2).replace('.',',')+' €':Math.round(v).toLocaleString('de-AT')+' €';
+   const per=runs*rate/1000*ecpm,month=per/span*30,perPlayer=players.length?month/players.length:0;
+   const rt=[['🎬 Videos im Zeitraum',Math.round(runs*rate)],['💶 Einnahmen im Zeitraum',eur(per)],['📅 Hochgerechnet pro Monat',eur(month)],['👤 pro Spieler & Monat',eur(perPlayer)],['🚀 bei 100 Spielern / Monat',eur(perPlayer*100)],['🌍 bei 1.000 Spielern / Monat',eur(perPlayer*1000)]];
+   $('revTiles').innerHTML=rt.map(t=>`<div class="tile"><div class="k">${t[0]}</div><div class="v">${t[1]}</div></div>`).join('');}
   // daily series
   const days=range===1?1:range||Math.max(1,Math.min(60,Math.ceil((Date.now()-Math.min(Date.now(),...S.map(e=>e.t)))/864e5)+1));
   const keys=[],lab=[];for(let i=days-1;i>=0;i--){const d=new Date(Date.now()-i*864e5);keys.push(dayKey(d));lab.push(d.getDate()+'.'+(d.getMonth()+1)+'.')}
@@ -177,6 +192,7 @@ function render(){
 
 document.querySelectorAll('.filters button[data-r]').forEach(b=>b.onclick=()=>{document.querySelectorAll('.filters button[data-r]').forEach(x=>x.classList.remove('on'));b.classList.add('on');range=+b.dataset.r;render()});
 $('grpSel').onchange=e=>{grp=e.target.value;render()};
+$('inEcpm').oninput=()=>render();$('inRate').oninput=()=>render();
 addEventListener('resize',()=>{if(all.length)render()});
 
 if(DEMO){$('login').classList.add('hidden');$('app').classList.remove('hidden');$('who').textContent='Demo mit Beispieldaten';$('btnReload').onclick=()=>load();load()}
