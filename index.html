@@ -382,7 +382,7 @@ const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 let st;
 function newGame(phase){
   st={phase,segs:[],px:0,py:0,a:Math.PI,dir:-1,omega:4.4,score:0,combo:0,revived:false,
-      buffs:{slow:0,magnet:0,wide:0,inv:0,zeit:0},pups:[],shield:false,rings:[],flys:[],zoom:0,paused:false,world:{from:0,to:0,t:1},Lcur:L,limCur:LIMIT,pulse:false,pulseT:0,blockT:0,storm:0,stormOff:0,nextEvent:45,tut:0,banner:null,obs:[],coins:[],anchors:[],anchor:null,coinsRun:0,recordBeaten:false,nextObsX:L*4,cam:{x:0},camY:0,topBoost:0,altStage:0,pops:[],parts:[],falling:[],shake:0,t:0};
+      buffs:{slow:0,magnet:0,wide:0,inv:0,zeit:0,double:0},pups:[],shield:false,rings:[],flys:[],zoom:0,paused:false,world:{from:0,to:0,t:1},Lcur:L,limCur:LIMIT,pulse:false,pulseT:0,blockT:0,storm:0,stormOff:0,nextEvent:45,tut:0,banner:null,obs:[],coins:[],anchors:[],anchor:null,coinsRun:0,recordBeaten:false,nextObsX:L*4,cam:{x:0},camY:0,topBoost:0,altStage:0,pops:[],parts:[],falling:[],shake:0,t:0};
 }
 newGame('menu');
 
@@ -441,7 +441,7 @@ function genPattern(){
   }
   const step=rnd(3.2*L,4.7*L)-diff*0.8*L;
   coin(x+step/2,st.py>220?st.py+rnd(-200,250):rnd(GROUND+80,FITTOP-80),0.4);
-  if(st.score>8&&Math.random()<0.08){const q=Math.random(),kind=q<0.38?'shield':q<0.66?'magnet':'rocket';
+  if(st.score>3&&Math.random()<0.17){const W={shield:17,magnet:13,rocket:12,double:15,coinrain:13,wide:12,zeit:10,anchor:8};let q=Math.random()*100,kind='shield';for(const k in W){q-=W[k];if(q<0){kind=k;break}}
     const py=st.py>Math.min(TOP,FITTOP)-100?rnd(Math.max(GROUND+90,st.py-200),Math.min(TOP-60,st.py+200)):rnd(GROUND+90,Math.min(TOP,FITTOP)-90);
     st.pups.push({x:x+step*0.55,y:py,kind,ph:rnd(0,6)})}
   if(st.py>220||Math.random()<0.3){
@@ -601,7 +601,7 @@ let ovFrom='menu';
 function openOv(id,from,fn){ovFrom=from;$(from).classList.add('hidden');$(id).classList.remove('hidden');fn();sfx.click()}
 
 // ---------- power-ups ----------
-const PUPS={shield:{i:'🛡',c:'#4dabff',n:'SCHILD'},magnet:{i:'🧲',c:'#ff5a5a',n:'MAGNET'},hoch:{i:'⬆️',c:'#3ddc97',n:'HÖHE +80'},rocket:{i:'🚀',c:'#ff7a1a',n:'RAKETEN-SCHUB'}};
+const PUPS={shield:{i:'🛡',c:'#4dabff',n:'SCHILD'},magnet:{i:'🧲',c:'#ff5a5a',n:'MAGNET'},hoch:{i:'⬆️',c:'#3ddc97',n:'HÖHE +80'},rocket:{i:'🚀',c:'#ff7a1a',n:'RAKETEN-SCHUB'},double:{i:'⭐',c:'#ffc107',n:'DOPPELTE PUNKTE'},coinrain:{i:'💰',c:'#e0a800',n:'MÜNZREGEN'},wide:{i:'🎯',c:'#2ecc71',n:'GROSSE ZONE'},zeit:{i:'⏳',c:'#9b6dff',n:'ZEITLUPE'},anchor:{i:'⚓',c:'#5bc0de',n:'GRATIS-ANKER'}};
 function drawPups(){
   for(const p of st.pups){if(p.taken)continue;const x=sx(p.x),y=sy(p.y+Math.sin(st.t*2.4+p.ph)*6);if(x<-40||x>W+40)continue;
     const r=17*S,pl=1+0.08*Math.sin(st.t*6+p.ph),c=PUPS[p.kind].c;
@@ -613,6 +613,12 @@ function drawPups(){
 function collectPup(p){
   p.taken=true;stat('power',1);const d=PUPS[p.kind];
   if(p.kind==='rocket'){st.rocket={n:6,t:0.35};noise(1.2,0.3,500);tone(120,1.2,'sawtooth',0.07,4);return}
+  if(p.kind==='double'){st.buffs.double=8;return}
+  if(p.kind==='wide'){st.buffs.wide=6;return}
+  if(p.kind==='zeit'){st.buffs.zeit=5;return}
+  const lg=st.segs[st.segs.length-1]||{x2:st.px,y2:st.py};
+  if(p.kind==='coinrain'){for(let i=0;i<10;i++)st.coins.push({x:lg.x2+70+i*38,y:lg.y2+40+Math.sin(i/9*Math.PI)*90,ph:i});return}
+  if(p.kind==='anchor'){const an={x:lg.x2,y:lg.y2,idx:st.segs.length,free:true};st.anchors.push(an);st.anchor=an;return}
   if(p.kind==='shield')st.shield=true;else if(p.kind==='magnet')st.buffs.magnet=8;
   else{st.topBoost++;TOP=FITTOP+st.topBoost*80;stat('boosts',1)}
   st.banner={text:d.i+' '+d.n+'!',t:0};ring(p.x,p.y,d.c,120);
@@ -815,7 +821,7 @@ function triggerEvent(){
 const TUT=['','Tippe, wenn der Balken im GELBEN Bereich ist – dann gibt\'s PERFEKT!','Super! Je waagrechter, desto mehr Punkte. Zu steil = Einsturz!','Knapp über dem Boden (Anker-Zone) setzt du Anker – die sichern dich!'];
 
 // ---------- buffs ----------
-const BUFF={slow:{d:4,icon:'🐢',name:'Ruhige Hand'},magnet:{d:6,icon:'🧲',name:'Magnet'},wide:{d:5,icon:'🎯',name:'Große Zone'},inv:{d:5,icon:'🛡',name:'Unverwundbar'},zeit:{d:5,icon:'⏳',name:'Zeitlupe'}};
+const BUFF={slow:{d:4,icon:'🐢',name:'Ruhige Hand'},magnet:{d:6,icon:'🧲',name:'Magnet'},wide:{d:5,icon:'🎯',name:'Große Zone'},inv:{d:5,icon:'🛡',name:'Unverwundbar'},zeit:{d:5,icon:'⏳',name:'Zeitlupe'},double:{d:8,icon:'⭐',name:'Doppelte Punkte'}};
 function grantBuff(c,seg){
   const k=c>=3&&c%3===0?'inv':c%3===2?['slow','magnet','wide'][Math.floor(c/3)%3]:null;
   if(!k)return;
@@ -826,7 +832,7 @@ function grantBuff(c,seg){
   else{tone(660,0.1,'triangle',0.14,0,0.1);tone(990,0.14,'triangle',0.14,0,0.2)}
 }
 function renderBuffs(){
-  const b=st.buffs,small=['slow','magnet','wide','zeit'].filter(k=>b[k]>0).map(k=>BUFF[k].icon+' '+b[k].toFixed(1)+'s').join('  ');
+  const b=st.buffs,small=['double','slow','magnet','wide','zeit'].filter(k=>b[k]>0).map(k=>BUFF[k].icon+' '+b[k].toFixed(1)+'s').join('  ');
   const t=(st.topBoost?'<div style="color:#7ff0bf">⬆ Höhenlimit +'+st.topBoost*80+'</div>':'')+(st.shield?'<div style="color:#8fd0ff">🛡 Schild bereit</div>':'')+(st.storm>0?'<div style="color:#ff9f9f">🌪 Sturm '+st.storm.toFixed(1)+'s</div>':'')+(b.inv>0?'<div style="color:#ffcf33;font-size:17px">🛡 UNVERWUNDBAR '+b.inv.toFixed(1)+'s</div>':'')+(small?'<div>'+small+'</div>':'');
   const el=$('buffs');if(el._t!==t){el._t=t;el.innerHTML=t}
 }
@@ -873,6 +879,7 @@ function tap(){
     for(let i=0;i<14;i++)st.parts.push({x:seg.x2,y:seg.y2,vx:rnd(-120,120),vy:rnd(-40,160),t:0,col:'#ffe066'})}
   else if(ad<GOOD){st.combo=0;pts=2;text='GUT  +2';col='#b8ffb0';sfx.place()}
   else{st.combo=0;pts=1;text='+1';col='#ffffff';sfx.place()}
+  if(st.buffs.double>0){pts*=2;text+=' ×2'}
   st.score+=pts;
   if(st.pulse&&ad>LIMIT&&!st.tut){st.score+=2;st.pops.push({x:seg.x2,y:seg.y2+52,text:'⚡ STEILPASS! +2',col:'#8ff0ff',t:-0.25});tone(700,0.18,'triangle',0.12,1.6)}
   st.pulse=false;st.pulseT=0;st.limCur=LIMIT;st.blockT=0;
