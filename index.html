@@ -165,6 +165,16 @@ h1,.btn,.sign h1,.sign .tag,#score,.big,.tab,.coins,.coinbox,.reason,.rank,#ches
 .setrow input[type=checkbox]{width:24px;height:24px;accent-color:#3f8a3a}
 #onlineSub{display:flex;gap:8px;width:100%;max-width:340px}
 .wk{font-family:"Lilita One",system-ui;font-size:16px;color:#ffe9b8;text-shadow:0 2px 0 #4a2d14}
+#btnProf{position:absolute;top:14px;left:14px;width:46px;height:46px;border-radius:50%;border:3px solid #5e3b1e;background:linear-gradient(#c08a52,#8a5a30);box-shadow:0 4px 0 #4a2d14;font-size:22px;cursor:pointer;margin:0!important}
+.modechip{font-family:"Lilita One",system-ui;font-size:17px;color:#2f5d8a;background:linear-gradient(#fff,#e4f0fb);border:0;border-radius:999px;padding:9px 18px;box-shadow:0 4px 0 #a9c4de;cursor:pointer}
+.iconrow{display:flex;gap:6px;justify-content:center;width:100%;max-width:360px}
+.ib{position:relative;flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;border:0;border-radius:16px;padding:9px 2px 7px;background:linear-gradient(#ffffff,#e4f0fb);box-shadow:0 4px 0 #a9c4de;color:#2f5d8a;font-family:"Lilita One",system-ui;font-size:11px;cursor:pointer}
+.ib span{font-size:24px;line-height:1.1}
+.ib:active{transform:translateY(3px);box-shadow:0 1px 0 #a9c4de}
+.ib i{position:absolute;top:-4px;right:2px;min-width:18px;height:18px;border-radius:9px;background:#ef4444;color:#fff;font-style:normal;font-size:11px;line-height:18px;padding:0 4px;display:none}
+.ib i.on{display:block}
+#menu{gap:18px}
+#profOv input{width:260px}
 </style>
 </head>
 <body>
@@ -180,22 +190,45 @@ h1,.btn,.sign h1,.sign .tag,#score,.big,.tab,.coins,.coinbox,.reason,.rank,#ches
 </div>
 
 <div id="menu" class="ov">
-  <div class="sign"><span class="nail" style="left:10px"></span><span class="nail" style="right:10px"></span><h1>Drehbrücke</h1><div class="tag">Tippen · Drehen · Bauen</div></div>
-  <div class="muted" id="menuBest"></div>
-  <div class="toprow"><div class="lvl" id="lvlM"></div><div class="coinbox" id="menuCoins"></div></div>
   <button id="btnSet">⚙️</button>
-  <div class="inrow"><input id="nameIn" maxlength="12" placeholder="Dein Name" autocomplete="off"><input id="groupIn" maxlength="16" placeholder="Gruppen-Code" autocomplete="off"></div>
-  <div class="modes" id="modeTabs"><button class="tab" data-m="classic">🌉 Klassisch</button><button class="tab" data-m="rush">⏱ Zeit-Rush</button><button class="tab" data-m="zen">🧘 Zen</button></div>
-  <div class="modes" id="diffTabs"><button class="tab" data-d="easy">🟢 Leicht</button><button class="tab" data-d="normal">🟡 Normal</button><button class="tab" data-d="hard">🔴 Schwer</button></div>
+  <button id="btnProf">👤</button>
+  <div class="sign"><span class="nail" style="left:10px"></span><span class="nail" style="right:10px"></span><h1>Drehbrücke</h1><div class="tag">Tippen · Drehen · Bauen</div></div>
+  <div class="toprow"><div class="lvl" id="lvlM"></div><div class="coinbox" id="menuCoins"></div></div>
   <button class="btn big" id="btnStart">▶ Spielen</button>
-  <div class="row2">
-    <button class="btn alt sm" id="btnShopM">🎨 Skins</button>
-    <button class="btn alt sm" id="btnBoardM">🏆 Bestenliste</button>
-    <button class="btn alt sm" id="btnAchM">🏅 Erfolge</button>
-    <button class="btn alt sm" id="btnStatsM">📊 Statistik</button>
+  <button class="modechip" id="btnMode"></button>
+  <div class="muted" id="menuBest"></div>
+  <div class="iconrow">
+    <button class="ib" id="btnShopM"><span>🎨</span>Skins</button>
+    <button class="ib" id="btnBoardM"><span>🏆</span>Bestenliste</button>
+    <button class="ib" id="btnMissM"><span>📋</span>Aufgaben<i id="missBadge"></i></button>
+    <button class="ib" id="btnAchM"><span>🏅</span>Erfolge</button>
+    <button class="ib" id="btnStatsM"><span>📊</span>Statistik</button>
   </div>
+</div>
+
+<div id="modeOv" class="ov hidden">
+  <h1 style="font-size:34px">🎮 Spielmodus</h1>
+  <div class="modes" id="modeTabs"><button class="tab" data-m="classic">🌉 Klassisch</button><button class="tab" data-m="rush">⏱ Zeit-Rush</button><button class="tab" data-m="zen">🧘 Zen</button></div>
+  <div class="muted" id="modeInfo"></div>
+  <h1 style="font-size:28px;margin-top:8px">Schwierigkeit</h1>
+  <div class="modes" id="diffTabs"><button class="tab" data-d="easy">🟢 Leicht</button><button class="tab" data-d="normal">🟡 Normal</button><button class="tab" data-d="hard">🔴 Schwer</button></div>
+  <button class="btn" id="btnModeOk">Fertig</button>
+</div>
+
+<div id="profOv" class="ov hidden">
+  <h1 style="font-size:34px">👤 Profil</h1>
+  <input id="nameIn" maxlength="12" placeholder="Dein Name" autocomplete="off">
+  <input id="groupIn" maxlength="16" placeholder="Gruppen-Code (optional)" autocomplete="off">
+  <div class="muted" style="max-width:300px">Mit dem gleichen Gruppen-Code seht ihr eure eigene Bestenliste.</div>
+  <div class="muted" id="privNote" style="font-size:12px;max-width:300px;opacity:.8">📊 Für Bestenliste & Statistik werden dein Name, Spielzeit und Punkte gespeichert – keine anderen Daten.</div>
+  <button class="btn" id="btnProfOk">Fertig</button>
+</div>
+
+<div id="missOv" class="ov hidden">
+  <h1 style="font-size:34px">📋 Aufgaben</h1>
   <div class="ms" id="missionsM"></div>
-  <div class="muted" style="font-size:12px;max-width:320px;opacity:.8">📊 Für Bestenliste & Statistik werden dein Name, Spielzeit und Punkte gespeichert – keine anderen Daten.</div>
+  <button class="btn alt" id="btnMissBack">Zurück</button>
+</div>
 </div>
 
 <div id="over" class="ov hidden">
@@ -1065,12 +1098,20 @@ $('mute').onclick=e=>{e.stopPropagation();muted=!muted;LS.set('muted',muted);aud
 $('btnStart').onclick=start;$('btnRevive').onclick=e=>{e.stopPropagation();audio();revive()};
 $('menuBest').textContent=best?'Bestwert: '+best:'';
 $('menuCoins').textContent='🪙 '+coins;
-renderMissions('missionsM');
+renderMissions('missionsM');renderMissBadge&&renderMissBadge();
 $('nameIn').value=pname;
 $('groupIn').value=group;
 $('groupIn').addEventListener('input',e=>{group=e.target.value.toLowerCase().replace(/[^a-z0-9äöü_-]/g,'').slice(0,16);e.target.value=group;LS.set('group',group)});
-function renderModes(){[...document.querySelectorAll('#modeTabs .tab')].forEach(b=>b.classList.toggle('on',b.dataset.m===mode))}
-function renderDiff(){[...document.querySelectorAll('#diffTabs .tab')].forEach(b=>b.classList.toggle('on',b.dataset.d===diff))}
+const MODEINFO={classic:'Endlos bauen, so weit du kommst. Zählt für die Online-Bestenliste.',rush:'60 Sekunden – so viele Punkte wie möglich. Fehler kosten 5 Sekunden.',zen:'Keine Hindernisse, kein Einsturz. Einfach entspannt bauen.'};
+function renderChip(){const M={classic:'🌉 Klassisch',rush:'⏱ Zeit-Rush',zen:'🧘 Zen'},D={easy:'🟢 Leicht',normal:'🟡 Normal',hard:'🔴 Schwer'};
+  $('btnMode').textContent=M[mode]+(mode==='zen'?'':' · '+D[diff])+'  ▾';$('modeInfo').textContent=MODEINFO[mode]}
+function renderMissBadge(){const open=daily.m.filter(m=>!m.done).length;const b=$('missBadge');b.textContent=open;b.classList.toggle('on',open>0)}
+function renderModes(){[...document.querySelectorAll('#modeTabs .tab')].forEach(b=>b.classList.toggle('on',b.dataset.m===mode));renderChip()}
+function renderDiff(){[...document.querySelectorAll('#diffTabs .tab')].forEach(b=>b.classList.toggle('on',b.dataset.d===diff));if($('btnMode'))renderChip()}
+function swapOv(a,b){$(a).classList.add('hidden');$(b).classList.remove('hidden');sfx.click()}
+$('btnMode').onclick=()=>swapOv('menu','modeOv');$('btnModeOk').onclick=()=>swapOv('modeOv','menu');
+$('btnProf').onclick=()=>swapOv('menu','profOv');$('btnProfOk').onclick=()=>swapOv('profOv','menu');
+$('btnMissM').onclick=()=>{renderMissions('missionsM');renderMissBadge&&renderMissBadge();swapOv('menu','missOv')};$('btnMissBack').onclick=()=>{renderMissBadge();swapOv('missOv','menu')};
 [...document.querySelectorAll('#diffTabs .tab')].forEach(b=>b.onclick=()=>{diff=b.dataset.d;LS.set('diff',diff);renderDiff();sfx.click()});renderDiff();
 [...document.querySelectorAll('#modeTabs .tab')].forEach(b=>b.onclick=()=>{mode=b.dataset.m;LS.set('mode',mode);renderModes();sfx.click()});renderModes();
 let setFrom='menu';
@@ -1097,14 +1138,14 @@ function setPause(p){if(st.phase!=='play'&&p)return;st.paused=p;cg(S=>p?S.game.g
 $('pause').onclick=e=>{e.stopPropagation();setPause(true)};
 $('btnResume').onclick=()=>setPause(false);
 $('btnQuit').onclick=()=>{logSession();st.paused=false;applySkinTop();$('timer').classList.add('hidden');$('prog').classList.add('hidden');$('pauseOv').classList.add('hidden');$('hud').classList.add('hidden');saveStats();newGame('menu');
-  $('menuCoins').textContent='🪙 '+coins;$('menuBest').textContent=best?'Bestwert: '+best:'';renderMissions('missionsM');$('lvlM').innerHTML=lvlHTML();$('menu').classList.remove('hidden')};
+  $('menuCoins').textContent='🪙 '+coins;$('menuBest').textContent=best?'Bestwert: '+best:'';renderMissions('missionsM');renderMissBadge&&renderMissBadge();$('lvlM').innerHTML=lvlHTML();$('menu').classList.remove('hidden')};
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&st.phase==='play'&&!st.paused)setPause(true)});
 $('tabLocal').onclick=()=>setTab('local');$('tabOnline').onclick=()=>setTab('online');
 $('btnBoardO').onclick=e=>{e.stopPropagation();openBoard('over')};
 $('btnBoardBack').onclick=()=>{$('board').classList.add('hidden');$(boardFrom).classList.remove('hidden')};
 $('btnHome').onclick=e=>{e.stopPropagation();sfx.click();applySkinTop();
   ['over','hud','prog','chestOv','timer'].forEach(i=>$(i).classList.add('hidden'));newGame('menu');
-  $('menuCoins').textContent='🪙 '+coins;$('menuBest').textContent=best?'Bestwert: '+best:'';renderMissions('missionsM');$('lvlM').innerHTML=lvlHTML();$('menu').classList.remove('hidden')};
+  $('menuCoins').textContent='🪙 '+coins;$('menuBest').textContent=best?'Bestwert: '+best:'';renderMissions('missionsM');renderMissBadge&&renderMissBadge();$('lvlM').innerHTML=lvlHTML();$('menu').classList.remove('hidden')};
 cv.addEventListener('pointerdown',e=>{e.preventDefault();audio();tap()});
 addEventListener('keydown',e=>{if(e.target&&e.target.tagName==='INPUT')return;if(e.code==='Space'||e.code==='Enter'){e.preventDefault();tap()}});
 
@@ -1580,8 +1621,7 @@ function loop(now){
 }
 requestAnimationFrame(loop);
 if(CG_BUILD){
-  document.querySelector('#nameIn').closest('.inrow').style.display='none';$('tabOnline').style.display='none';
-  const note=[...document.querySelectorAll('#menu .muted')].pop();if(note)note.textContent='';
+  $('btnProf').style.display='none';$('tabOnline').style.display='none';$('privNote').textContent='';
   (async()=>{try{window.CrazyGames&&window.CrazyGames.SDK.game.loadingStart()}catch(e){}
     await cgInit();cg(S=>S.game.loadingStop());start()})();
 }
