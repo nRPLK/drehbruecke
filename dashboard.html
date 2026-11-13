@@ -85,6 +85,8 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
     <div class="card"><h2>Wann wird gespielt? (Runden nach Uhrzeit)</h2><svg class="chart" id="chHours"></svg></div>
     <div class="card"><h2>Modus & Schwierigkeit</h2><div id="shares"></div></div>
   </div>
+  <div class="card" style="margin-bottom:16px"><h2>🎯 Wo scheitern die Spieler? (Punkte beim Absturz)</h2><svg class="chart" id="chScore"></svg>
+    <div class="note" id="scoreNote"></div></div>
   <div class="card" style="margin-bottom:16px"><h2>Spieler</h2><div class="tablewrap"><table id="tblPlayers"></table></div>
     <div class="note">Ein „Spieler“ = ein Gerät. Name und Gruppe so, wie zuletzt im Spiel eingegeben.</div></div>
   <div class="card"><h2>Letzte Runden</h2><div class="tablewrap"><table id="tblRecent"></table></div></div>
@@ -105,7 +107,7 @@ const FIREBASE_CONFIG = {
 const $=id=>document.getElementById(id);
 const DEMO=location.search.includes('demo');
 let all=[],range=7,grp='';
-const MODES={classic:'🌉 Klassisch',rush:'⏱ Zeit-Rush',zen:'🧘 Zen'},DIFFS={easy:'🟢 Leicht',normal:'🟡 Normal',hard:'🔴 Schwer'};
+const MODES={classic:'🌉 Klassisch',rush:'⏱ Zeit-Rush',zen:'🧘 Zen',daily:'📅 Tages-Challenge'},DIFFS={easy:'🟢 Leicht',normal:'🟡 Normal',hard:'🔴 Schwer'};
 const fmtDur=s=>{s=Math.round(s);const h=Math.floor(s/3600),m=Math.floor(s%3600/60),r=s%60;return h?h+' h '+m+' min':m?m+' min '+r+' s':r+' s'};
 const dayKey=t=>{const d=new Date(t);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
 const esc=x=>String(x).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -177,6 +179,14 @@ function render(){
   bars($('chPlayers'),lab,act,v=>Math.round(v),'var(--bar2)',i=>`<b>${lab[i]}</b><br>${act[i]} Spieler`);
   const hrs=[...Array(24)].map((_,h)=>S.filter(e=>new Date(e.t).getHours()===h).length);
   bars($('chHours'),[...Array(24)].map((_,h)=>h+'h'),hrs,v=>Math.round(v),'var(--bar)',i=>`<b>${i}:00–${i}:59</b><br>${hrs[i]} Runden`);
+  // score distribution (Klassisch + Tages-Challenge)
+  {const R=S.filter(e=>e.m==='classic'||e.m==='daily'),bw=10,nb=Math.min(30,Math.max(6,Math.ceil(Math.max(0,...R.map(e=>e.s))/bw)+1));
+   const cnt=Array(nb).fill(0);R.forEach(e=>cnt[Math.min(nb-1,Math.floor(e.s/bw))]++);
+   const lab=cnt.map((_,i)=>i===nb-1?(i*bw)+'+':String(i*bw));
+   bars($('chScore'),lab,cnt,v=>Math.round(v),'var(--bar2)',i=>`<b>${lab[i]}${i<nb-1?'–'+(i*bw+bw-1):''} Punkte</b><br>${cnt[i]} Runden (${R.length?Math.round(cnt[i]/R.length*100):0} %)`);
+   const sorted=R.map(e=>e.s).sort((a,b)=>a-b),q=p=>sorted.length?sorted[Math.min(sorted.length-1,Math.floor(p*sorted.length))]:0;
+   const peak=cnt.indexOf(Math.max(...cnt));
+   $('scoreNote').innerHTML=R.length?`Median: <b>${q(0.5)}</b> Punkte · 75 % der Runden enden unter <b>${q(0.75)}</b> · die meisten scheitern bei <b>${lab[peak]}${peak<nb-1?'–'+(peak*bw+bw-1):''}</b>. Liegt der Gipfel sehr früh (unter 20), ist der Anfang zu schwer; liegt er sehr spät, wird es langweilig.`:'Noch keine Runden im Zeitraum.'}
   // shares
   const share=(obj,key)=>Object.keys(obj).map(k=>{const c=S.filter(e=>(e[key]||'')===k).length,p=S.length?c/S.length:0;
     return `<div class="share"><span class="lb">${obj[k]}</span><span class="tr"><i style="width:${p*100}%"></i></span><span class="pv">${Math.round(p*100)} %</span></div>`}).join('');
