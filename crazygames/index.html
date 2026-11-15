@@ -923,7 +923,7 @@ const easeBack=t=>{const c=1.9;return 1+(c+1)*Math.pow(t-1,3)+c*Math.pow(t-1,2)}
 
 // ---------- level & xp ----------
 let xp=LS.get('xp',0),level=LS.get('level',1);
-const xpNeed=l=>80+l*40;
+const xpNeed=l=>Math.round(150+l*90+l*l*8);
 function lvlHTML(gain){const n=xpNeed(level),p=Math.min(100,xp/n*100);
   return '<div class="lt"><span>⭐ Level '+level+'</span><span>'+(gain?'<span style="color:#2e7d32">+'+gain+' XP</span> · ':'')+xp+'/'+n+' XP</span></div><div class="bar"><i style="width:'+p+'%"></i></div>'}
 function addXP(n){
@@ -938,7 +938,8 @@ const PASS_N=30,PASS_XP=150,PASS_IT=['shield','double','magnet','rocket','revive
 const seasonKey=()=>{const d=new Date();return d.getFullYear()+'-'+(d.getMonth()+1)};
 let pass=LS.get('pass',{k:'',xp:0,cl:[]});
 function passCheck(){if(pass.k!==seasonKey()){pass={k:seasonKey(),xp:0,cl:[]};LS.set('pass',pass)}}
-function passTier(){passCheck();return Math.min(PASS_N,Math.floor(pass.xp/PASS_XP))}
+const passCost=i=>150+12*i,passStart=t=>{let s2=0;for(let i=0;i<t;i++)s2+=passCost(i);return s2};
+function passTier(){passCheck();let t=0,acc=0;while(t<PASS_N&&acc+passCost(t)<=pass.xp){acc+=passCost(t);t++}return t}
 function passRew(i){if(i===PASS_N)return {t:'skin',i:'👑',n:'Skin „Saison-Krone“'};
   if(i%10===0)return {t:'chest',v:i===10?2:3,i:CHESTS[i===10?2:3].i,n:CHESTS[i===10?2:3].n};
   if(i%5===0){const it=ITEMS.find(x=>x.id===PASS_IT[(i/5-1)%5]);return {t:'item',v:it.id,i:it.i,n:it.n}}
@@ -948,8 +949,8 @@ function passOpen(){passCheck();return [...Array(passTier())].filter((_,i)=>!pas
 function renderPassBadge(){const n=passOpen(),b=$('passBadge');b.textContent=n;b.classList.toggle('on',n>0)}
 function renderPass(){
   const t=passTier(),d=new Date(),end=new Date(d.getFullYear(),d.getMonth()+1,1),left=Math.ceil((end-d)/864e5);
-  const into=t>=PASS_N?PASS_XP:pass.xp-t*PASS_XP;
-  $('passHead').innerHTML='<div class="lt"><span>🎫 Stufe '+t+' / '+PASS_N+'</span><span>'+(t>=PASS_N?'Fertig! 🎉':into+'/'+PASS_XP+' XP')+'</span></div><div class="bar"><i style="width:'+(into/PASS_XP*100)+'%"></i></div><div class="muted" style="font-size:12px;margin-top:4px">Saison endet in '+left+' Tagen · XP aus jeder Runde zählen</div>';
+  const need=t>=PASS_N?1:passCost(t),into=t>=PASS_N?1:pass.xp-passStart(t);
+  $('passHead').innerHTML='<div class="lt"><span>🎫 Stufe '+t+' / '+PASS_N+'</span><span>'+(t>=PASS_N?'Fertig! 🎉':into+'/'+need+' XP')+'</span></div><div class="bar"><i style="width:'+(into/need*100)+'%"></i></div><div class="muted" style="font-size:12px;margin-top:4px">Saison endet in '+left+' Tagen · XP aus jeder Runde zählen</div>';
   const L=$('passList');L.innerHTML='';
   for(let i=1;i<=PASS_N;i++){const r=passRew(i),got=pass.cl.includes(i),can=i<=t&&!got,el=document.createElement('div');
     el.className='card upg'+(got?' max':'')+(!can&&!got?' poor':'');
@@ -1489,7 +1490,7 @@ function showOver(){
     $('overReason').textContent=adm?'🛠 Admin-Runde':rec&&rb>0?'🏆 Neuer Rush-Rekord!':st.reason;$('overScore').textContent=st.score;
     $('overBest').textContent='⏱ Rush-Rekord: '+Math.max(rb,adm?0:st.score);$('overRank').textContent='';
     $('overCoins').textContent='+'+st.coinsRun+'  ·  gesamt '+coins;$('btnRevive').classList.add('hidden');renderMissions('missionsO');setDbl();
-    const gain=adm?0:Math.round((st.score+st.coinsRun*2)*(DIFF[st.diff]||DIFF.normal).xp*(1+bonus('xp')));if(gain)addXP(gain);$('lvlO').innerHTML=lvlHTML(gain);$('btnChest').classList.add('hidden');
+    const gain=adm?0:Math.round((st.score*0.5+st.coinsRun)*(DIFF[st.diff]||DIFF.normal).xp*(1+bonus('xp')));if(gain)addXP(gain);$('lvlO').innerHTML=lvlHTML(gain);$('btnChest').classList.add('hidden');
     $('over').classList.remove('hidden');updHud();return}
   const adm=isAdmin(),dly=st.mode==='daily',dbk='dayBest_'+dayKey(),prev=dly?LS.get(dbk,0):best,isRec=!adm&&st.score>prev;
   if(isRec){if(dly)LS.set(dbk,st.score);else{best=st.score;LS.set('best',best)}}
@@ -1506,7 +1507,7 @@ function showOver(){
   if(st.mode==='duel')duelFinish(st.score);
   const rk=adm||dly||st.mode==='duel'?0:addToBoard(st.score);if(!adm&&st.mode!=='duel')submitOnline(clean);
   if(adm)$('overReason').textContent='🛠 Admin-Runde – zählt nicht für die Bestenliste';
-  const gT=adm?0:Math.round((st.score+st.coinsRun*2)*(DIFF[st.diff]||DIFF.normal).xp*(1+bonus('xp'))),gain=Math.max(0,gT-(st.xpGiven||0));st.xpGiven=Math.max(st.xpGiven||0,gT);if(gain)addXP(gain);$('lvlO').innerHTML=lvlHTML(gain);
+  const gT=adm?0:Math.round((st.score*0.5+st.coinsRun)*(DIFF[st.diff]||DIFF.normal).xp*(1+bonus('xp'))),gain=Math.max(0,gT-(st.xpGiven||0));st.xpGiven=Math.max(st.xpGiven||0,gT);if(gain)addXP(gain);$('lvlO').innerHTML=lvlHTML(gain);
   const ct=adm?0:st.score>=500?3:st.score>=300?2:st.score>=150?1:0;chestTier=ct>(st.chestGot||0)?ct:0;if(chestTier)st.chestGot=ct;chestReady=chestTier>0;
   if(chestReady)$('btnChest').textContent=CHESTS[chestTier].i+' '+CHESTS[chestTier].n+' öffnen!';
   $('btnChest').classList.toggle('hidden',!chestReady);
