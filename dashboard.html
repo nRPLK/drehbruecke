@@ -86,6 +86,10 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
     <div class="card"><h2>Wann wird gespielt? (Runden nach Uhrzeit)</h2><svg class="chart" id="chHours"></svg></div>
     <div class="card"><h2>Modus & Schwierigkeit</h2><div id="shares"></div></div>
   </div>
+  <div class="card" style="margin-bottom:16px"><h2>🔁 Kommen die Spieler wieder? (Rückkehr-Quote)</h2>
+    <div class="tiles" id="retTiles" style="margin-bottom:8px"></div>
+    <div class="note" id="retNote"></div>
+    <div class="tablewrap"><table id="tblRet"></table></div></div>
   <div class="card" style="margin-bottom:16px"><h2>🎯 Wo scheitern die Spieler? (Punkte beim Absturz)</h2><svg class="chart" id="chScore"></svg>
     <div class="note" id="scoreNote"></div></div>
   <div class="card" style="margin-bottom:16px"><h2>Spieler</h2><div class="tablewrap"><table id="tblPlayers"></table></div>
@@ -117,6 +121,8 @@ function demoData(){
   const names=[['a1','Niklas','familie'],['b2','Bruder','familie'],['c3','Max','4abeli'],['d4','Lena','4abeli'],['e5','Tim','4abeli'],['f6','','']],out=[],now=Date.now();
   for(let i=0;i<260;i++){const p=names[Math.floor(Math.random()*names.length)],t=now-Math.random()*20*864e5;
     out.push({u:p[0],n:p[1],g:p[2],m:Math.random()<0.75?'classic':Math.random()<0.6?'rush':'zen',d:Math.random()<0.65?'normal':Math.random()<0.5?'hard':'easy',s:Math.floor(Math.random()*180),a:Math.random()<0.5?0:1+Math.floor(Math.random()*3),r:Math.floor(Math.random()*2),dur:20+Math.floor(Math.random()*240),t})}
+  for(let k=0;k<60;k++){const u='x'+k,f=now-Math.floor(Math.random()*16)*864e5;out.push({u,n:'',g:'',m:'classic',d:'normal',s:Math.floor(Math.random()*120),a:0,r:0,dur:60,t:f});
+    for(const dd of [1,2,3,5,7,10])if(Math.random()<(dd===1?0.38:0.6/dd)&&f+dd*864e5<now)out.push({u,n:'',g:'',m:'classic',d:'normal',s:Math.floor(Math.random()*150),a:0,r:0,dur:80,t:f+dd*864e5})}
   return out;
 }
 
@@ -152,8 +158,24 @@ function bars(svg,labels,vals,fmt,color,tipFmt){
 }
 
 let rateTouched=false;
+function dayIdx(t){const d=new Date(t);d.setHours(0,0,0,0);return Math.round(d.getTime()/864e5)}
+function renderRetention(){
+  const A=all.filter(e=>e.u&&(!grp||e.g===grp)),by={};
+  for(const e of A){const d=dayIdx(e.t);(by[e.u]=by[e.u]||new Set()).add(d)}
+  const today=dayIdx(Date.now()),coh={};
+  for(const u in by){const days=[...by[u]].sort((a,b)=>a-b),f=days[0];(coh[f]=coh[f]||[]).push(by[u])}
+  const rate=(k)=>{let n=0,r=0;for(const f in coh){if(+f+k>today)continue;for(const set of coh[f]){n++;if(set.has(+f+k))r++}}return n?{p:r/n,n}:null};
+  const anyBack=()=>{let n=0,r=0;for(const f in coh){if(+f>=today)continue;for(const set of coh[f]){n++;if(set.size>1)r++}}return n?{p:r/n,n}:null};
+  const pc=x=>x?Math.round(x.p*100)+' %':'–',d1=rate(1),d3=rate(3),d7=rate(7),ab=anyBack();
+  const col=(x,goal)=>x?(x.p>=goal?'#2e9e5b':x.p>=goal*0.7?'#d9a400':'#d9534f'):'inherit';
+  $('retTiles').innerHTML=[['Nach 1 Tag (D1)',d1,0.35,'Ziel ≥ 35 %'],['Nach 3 Tagen (D3)',d3,0.2,'Ziel ≥ 20 %'],['Nach 7 Tagen (D7)',d7,0.12,'Ziel ≥ 12 %'],['Irgendwann wieder',ab,0.5,'']].map(([k,x,g,z])=>`<div class="tile"><div class="k">${k}</div><div class="v" style="color:${col(x,g)}">${pc(x)}</div><div class="k">${x?x.n+' Spieler':'noch zu wenig Daten'}${z?' · '+z:''}</div></div>`).join('');
+  $('retNote').textContent='Zählt Geräte nach ihrem ersten Spieltag. D1 = Anteil, der genau am Tag danach wieder gespielt hat. Grün = Go-Ziel aus dem Businessplan erreicht. Unabhängig vom gewählten Zeitraum, Gruppe wird berücksichtigt.';
+  const rows=Object.keys(coh).map(Number).sort((a,b)=>b-a).slice(0,14);
+  const cell=(f,k)=>{if(f+k>today)return '<td class="num" style="opacity:.4">–</td>';const L=coh[f],r=L.filter(s2=>s2.has(f+k)).length;return `<td class="num">${Math.round(r/L.length*100)} %</td>`};
+  $('tblRet').innerHTML='<tr><th>Erster Tag</th><th class="num">Neue Spieler</th><th class="num">D1</th><th class="num">D3</th><th class="num">D7</th></tr>'+rows.map(f=>`<tr><td>${new Date(f*864e5).toLocaleDateString('de-AT',{weekday:'short',day:'2-digit',month:'2-digit'})}</td><td class="num">${coh[f].length}</td>${cell(f,1)}${cell(f,3)}${cell(f,7)}</tr>`).join('');
+}
 function render(){
-  const S=filtered();
+  const S=filtered();renderRetention();
   // groups
   const groups=[...new Set(all.map(e=>e.g).filter(Boolean))].sort(),sel=$('grpSel'),cur=sel.value;
   sel.innerHTML='<option value="">Alle Gruppen</option>'+groups.map(g=>`<option value="${esc(g)}">👥 ${esc(g)}</option>`).join('');sel.value=cur;
