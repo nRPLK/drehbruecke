@@ -1967,24 +1967,33 @@ function navCur(){return NAV_T.find(id=>!$(id).classList.contains('hidden'))}
 function navSync(){const c=navCur(),show=!!c&&$('over').classList.contains('hidden')&&!(c==='shop'&&shopFrom!=='menu')&&!(c==='board'&&boardFrom!=='menu');
   $('navbar').classList.toggle('hidden',!show);document.body.classList.toggle('navon',show);
   document.querySelectorAll('#navbar .nb').forEach(b=>b.classList.toggle('on',b.dataset.t===c))}
-function navGo(t,dir){const c=navCur();if(c===t){if(t==='menu'){const b=$('btnStart');b.classList.remove('pulse');void b.offsetWidth;b.classList.add('pulse');$('menu').scrollTo({top:0,behavior:'smooth'})}return}
+function navGo(t,dir,swiped){const c=navCur();if(c===t){if(t==='menu'){const b=$('btnStart');b.classList.remove('pulse');void b.offsetWidth;b.classList.add('pulse');$('menu').scrollTo({top:0,behavior:'smooth'})}return}
   audio();NAV_T.forEach(id=>$(id).classList.add('hidden'));$('statsOv').classList.add('hidden');
   if(t==='menu'){$('menuCoins').textContent='🪙 '+coins;$('menuBest').textContent=best?'Bestwert: '+best:'';renderPassBadge();$('lvlM').innerHTML=lvlHTML();menuExtras()}
   else if(t==='shop'){shopFrom='menu';renderShop()}
   else if(t==='passOv'){renderPass()}
   else if(t==='board'){boardFrom='menu';setTab(lbTab)}
   else if(t==='achOv'){ovFrom='menu';renderAch()}
-  const el=$(t);el.classList.remove('hidden');el.scrollTop=0;if(dir){el.style.setProperty('--tx',(dir>0?40:-40)+'px');el.classList.remove('tabslide');void el.offsetWidth;el.classList.add('tabslide')}sfx.click();navSync()}
+  const el=$(t);el.classList.remove('hidden');el.scrollTop=0;if(dir){el.style.transition='none';el.style.transform='translateX('+(dir>0?1:-1)*(swiped?innerWidth*0.6:70)+'px)';el.style.opacity=swiped?'0.6':'0.5';void el.offsetWidth;el.style.transition='transform .28s cubic-bezier(.2,.8,.2,1),opacity .28s';el.style.transform='';el.style.opacity='';setTimeout(()=>{el.style.transition=''},300)}sfx.click();navSync()}
 document.querySelectorAll('#navbar .nb').forEach(b=>b.onclick=e=>{e.stopPropagation();const c=navCur();navGo(b.dataset.t,NAV_T.indexOf(b.dataset.t)-NAV_T.indexOf(c))});
 new MutationObserver(navSync).observe(document.body,{subtree:true,attributes:true,attributeFilter:['class']});
-// Wischen links/rechts wechselt den Tab
-(function(){let sx=0,sy=0,ok=false,t0=0;
-  addEventListener('touchstart',e=>{const c=navCur();ok=!!c&&!$('navbar').classList.contains('hidden');if(!ok)return;const tg=e.target;
-    if(tg.closest('input,textarea,canvas.pv,.hscroll'))ok=false;let n=tg;while(n&&n!==document.body){if(n.scrollWidth>n.clientWidth+4&&getComputedStyle(n).overflowX!=='visible'&&getComputedStyle(n).overflowX!=='hidden'){ok=false;break}n=n.parentElement}
-    const p=e.touches[0];sx=p.clientX;sy=p.clientY;t0=performance.now()},{passive:true});
-  addEventListener('touchend',e=>{if(!ok)return;ok=false;const p=e.changedTouches[0],dx=p.clientX-sx,dy=p.clientY-sy;
-    if(Math.abs(dx)<70||Math.abs(dy)>Math.abs(dx)*0.6||performance.now()-t0>700)return;const c=navCur(),i=NAV_T.indexOf(c),j=i+(dx<0?1:-1);
-    if(j>=0&&j<NAV_T.length)navGo(NAV_T[j],dx<0?1:-1)},{passive:true})})();
+// Wischen links/rechts wechselt den Tab – Inhalt folgt dem Finger
+(function(){let sx=0,sy=0,dx=0,ok=false,lock=0,t0=0,el=null,lastX=0,lastT=0,vel=0;const W=()=>innerWidth;
+  const ease='transform .26s cubic-bezier(.2,.8,.2,1),opacity .26s';
+  addEventListener('touchstart',e=>{const c=navCur();ok=!!c&&!$('navbar').classList.contains('hidden')&&e.touches.length===1;if(!ok)return;const tg=e.target;
+    if(tg.closest('input,textarea,#navbar'))ok=false;let n=tg;while(ok&&n&&n!==document.body){const ox=getComputedStyle(n).overflowX;if(n.scrollWidth>n.clientWidth+4&&ox!=='visible'&&ox!=='hidden'){ok=false;break}n=n.parentElement}
+    if(!ok)return;const p=e.touches[0];sx=lastX=p.clientX;sy=p.clientY;dx=0;lock=0;vel=0;t0=lastT=performance.now();el=$(c)},{passive:true});
+  addEventListener('touchmove',e=>{if(!ok)return;const p=e.touches[0],mx=p.clientX-sx,my=p.clientY-sy;
+    if(!lock){if(Math.abs(mx)>10&&Math.abs(mx)>Math.abs(my)*1.2){lock=1;el.style.transition='none';el.style.willChange='transform'}else if(Math.abs(my)>10){ok=false;return}else return}
+    e.preventDefault();const now=performance.now();vel=(p.clientX-lastX)/Math.max(1,now-lastT);lastX=p.clientX;lastT=now;
+    const i=NAV_T.indexOf(navCur()),edge=(mx>0&&i===0)||(mx<0&&i===NAV_T.length-1);dx=edge?mx*0.25:mx;
+    el.style.transform='translateX('+dx+'px)';el.style.opacity=String(1-Math.min(0.35,Math.abs(dx)/W()*0.5))},{passive:false});
+  addEventListener('touchend',()=>{if(!ok||!lock){ok=false;return}ok=false;const cur=el,i=NAV_T.indexOf(navCur()),dir=dx<0?1:-1,j=i+dir;
+    const go=(Math.abs(dx)>W()*0.22||Math.abs(vel)>0.45&&Math.sign(vel)===-dir)&&j>=0&&j<NAV_T.length;
+    if(!go){cur.style.transition=ease;cur.style.transform='';cur.style.opacity='';setTimeout(()=>{cur.style.transition='';cur.style.willChange=''},280);return}
+    cur.style.transition='transform .16s ease-in,opacity .16s';cur.style.transform='translateX('+(-dir*W())+'px)';cur.style.opacity='0.3';
+    setTimeout(()=>{cur.style.transition='';cur.style.transform='';cur.style.opacity='';cur.style.willChange='';navGo(NAV_T[j],dir,true)},150)});
+})();
 $('btnShopO').onclick=e=>{e.stopPropagation();openShop('over')};
 $('btnShopBack').onclick=()=>{$('shop').classList.add('hidden');$(shopFrom).classList.remove('hidden');
   if(shopFrom==='menu')$('menuCoins').textContent='🪙 '+coins;else $('overCoins').textContent='+'+st.coinsRun+'  ·  gesamt '+coins}
