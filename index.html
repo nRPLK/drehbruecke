@@ -2022,7 +2022,7 @@ if(CG_BUILD){['btnInviteD','btnInviteP'].forEach(i=>$(i).classList.add('hidden')
 $('btnStart').onclick=()=>{if(!CG_BUILD&&(pname||'').length<2){const r=$('nameRow');r.classList.remove('need');void r.offsetWidth;r.classList.add('need');$('nameM').focus();toast('👤 Bitte gib zuerst deinen Spielernamen ein');sfx.click();vib(30);return}confirmName(()=>{duelCtx=null;start()})};$('btnDuelM').onclick=()=>openDuels('menu');$('btnDuelBack').onclick=()=>{duelBadge();swapOv('duelOv','menu')};$('btnDuelGo').onclick=()=>newDuel($('duelIn').value);
 $('btnDuelO').onclick=e=>{e.stopPropagation();const c=duelLast;if(c&&c.id){newDuel(c.opp)}else{['over','hud','prog','timer'].forEach(i=>$(i).classList.add('hidden'));newGame('menu');openDuels('menu')}};
 addEventListener('pagehide',()=>{if(st&&st.phase==='over')logSession()});document.addEventListener('visibilitychange',()=>{if(document.hidden&&st&&st.phase==='over')logSession()});
-gadsInit();if(GADS)$('privNote').innerHTML='📊 Für Bestenliste & Statistik werden dein Name, Spielzeit und Punkte gespeichert. Werbung kommt von Google. <a href="datenschutz.html" target="_blank" style="color:inherit">Datenschutz</a>';
+gadsInit();if(!CG_BUILD)$('privNote').innerHTML='📊 Für Bestenliste & Liga werden dein Spitzname, deine Punkte und Spielzeit gespeichert – bitte keinen echten Namen. <a href="datenschutz.html" target="_blank" style="color:inherit">Datenschutz & Impressum</a>';
 if(CG_BUILD)$('btnDuelM').classList.add('hidden');else setTimeout(duelRefresh,1500);$('btnDbl').onclick=e=>{e.stopPropagation();audio();doubleCoins()};$('btnRevive').onclick=e=>{e.stopPropagation();audio();revive()};
 $('menuBest').textContent=best?'Bestwert: '+best:'';
 $('menuCoins').textContent='🪙 '+coins;
