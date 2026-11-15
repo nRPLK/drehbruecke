@@ -307,6 +307,11 @@ h1,.btn,.sign h1,.sign .tag,#score,.big,.tab,.coins,.coinbox,.reason,.rank,#ches
 @media (max-height:640px){#menu .sign h1{font-size:40px}#menu{gap:9px!important}}
 .namebad{max-width:300px;font-size:12px;font-weight:800;color:#fff;background:#d9534f;border-radius:10px;padding:5px 10px;text-align:center}
 .namerow.bad{outline:3px solid #d9534f}
+.navbar{z-index:40!important}.navbar.hidden{display:none!important}
+.nb.on:not(.home){color:#fff;background:rgba(255,220,150,.22)}.nb.on:not(.home) span{transform:scale(1.15)}
+.nb.home:not(.on){background:linear-gradient(#e9c58c,#c7914d);opacity:.95}
+body.navon #shop,body.navon #passOv,body.navon #board,body.navon #achOv{padding-bottom:calc(96px + env(safe-area-inset-bottom))!important}
+.tabslide{animation:tabIn .22s ease-out}@keyframes tabIn{from{opacity:.4;transform:translateX(var(--tx,0))}to{opacity:1;transform:none}}
 </style>
 </head>
 <body>
@@ -337,14 +342,15 @@ h1,.btn,.sign h1,.sign .tag,#score,.big,.tab,.coins,.coinbox,.reason,.rank,#ches
   <button class="lgchip hidden" id="btnLeagueM"></button>
   <div class="goalchip hidden" id="goalChip"></div>
   <div class="muted" id="menuBest"></div>
-  <nav class="navbar">
-    <button class="nb" id="btnShopM"><span>🛒</span>Shop</button>
-    <button class="nb" id="btnPassM"><span>🎫</span>Saison<i id="passBadge"></i></button>
-    <button class="nb home" id="btnHomeNav"><span>🌉</span>Spielen</button>
-    <button class="nb" id="btnBoardM"><span>🏆</span>Bestenliste</button>
-    <button class="nb" id="btnAchM"><span>🏅</span>Erfolge</button>
-  </nav>
 </div>
+
+<nav class="navbar hidden" id="navbar">
+    <button class="nb" id="btnShopM" data-t="shop"><span>🛒</span>Shop</button>
+    <button class="nb" id="btnPassM" data-t="passOv"><span>🎫</span>Saison<i id="passBadge"></i></button>
+    <button class="nb home" id="btnHomeNav" data-t="menu"><span>🌉</span>Spielen</button>
+    <button class="nb" id="btnBoardM" data-t="board"><span>🏆</span>Bestenliste</button>
+    <button class="nb" id="btnAchM" data-t="achOv"><span>🏅</span>Erfolge</button>
+  </nav>
 
 <div id="leagueOv" class="ov hidden">
   <h1 style="font-size:32px" id="lgTitle">🏅 Wochen-Liga</h1>
@@ -1955,7 +1961,30 @@ function renderShop(){
 }
 document.querySelectorAll('#shopTabs .tab').forEach(t=>t.onclick=()=>{shopTab=t.dataset.t;sfx.click();renderShop()});
 function openShop(from){audio();shopFrom=from;$(from).classList.add('hidden');$('shop').classList.remove('hidden');renderShop()}
-$('btnShopM').onclick=()=>openShop('menu');
+// ---------- Navigationsleiste unten (überall in Menü, Shop, Saison, Bestenliste, Erfolge) ----------
+const NAV_T=['shop','passOv','menu','board','achOv'];
+function navCur(){return NAV_T.find(id=>!$(id).classList.contains('hidden'))}
+function navSync(){const c=navCur(),show=!!c&&$('over').classList.contains('hidden')&&!(c==='shop'&&shopFrom!=='menu')&&!(c==='board'&&boardFrom!=='menu');
+  $('navbar').classList.toggle('hidden',!show);document.body.classList.toggle('navon',show);
+  document.querySelectorAll('#navbar .nb').forEach(b=>b.classList.toggle('on',b.dataset.t===c))}
+function navGo(t,dir){const c=navCur();if(c===t){if(t==='menu'){const b=$('btnStart');b.classList.remove('pulse');void b.offsetWidth;b.classList.add('pulse');$('menu').scrollTo({top:0,behavior:'smooth'})}return}
+  audio();NAV_T.forEach(id=>$(id).classList.add('hidden'));$('statsOv').classList.add('hidden');
+  if(t==='menu'){$('menuCoins').textContent='🪙 '+coins;$('menuBest').textContent=best?'Bestwert: '+best:'';renderPassBadge();$('lvlM').innerHTML=lvlHTML();menuExtras()}
+  else if(t==='shop'){shopFrom='menu';renderShop()}
+  else if(t==='passOv'){renderPass()}
+  else if(t==='board'){boardFrom='menu';setTab(lbTab)}
+  else if(t==='achOv'){ovFrom='menu';renderAch()}
+  const el=$(t);el.classList.remove('hidden');el.scrollTop=0;if(dir){el.style.setProperty('--tx',(dir>0?40:-40)+'px');el.classList.remove('tabslide');void el.offsetWidth;el.classList.add('tabslide')}sfx.click();navSync()}
+document.querySelectorAll('#navbar .nb').forEach(b=>b.onclick=e=>{e.stopPropagation();const c=navCur();navGo(b.dataset.t,NAV_T.indexOf(b.dataset.t)-NAV_T.indexOf(c))});
+new MutationObserver(navSync).observe(document.body,{subtree:true,attributes:true,attributeFilter:['class']});
+// Wischen links/rechts wechselt den Tab
+(function(){let sx=0,sy=0,ok=false,t0=0;
+  addEventListener('touchstart',e=>{const c=navCur();ok=!!c&&!$('navbar').classList.contains('hidden');if(!ok)return;const tg=e.target;
+    if(tg.closest('input,textarea,canvas.pv,.hscroll'))ok=false;let n=tg;while(n&&n!==document.body){if(n.scrollWidth>n.clientWidth+4&&getComputedStyle(n).overflowX!=='visible'&&getComputedStyle(n).overflowX!=='hidden'){ok=false;break}n=n.parentElement}
+    const p=e.touches[0];sx=p.clientX;sy=p.clientY;t0=performance.now()},{passive:true});
+  addEventListener('touchend',e=>{if(!ok)return;ok=false;const p=e.changedTouches[0],dx=p.clientX-sx,dy=p.clientY-sy;
+    if(Math.abs(dx)<70||Math.abs(dy)>Math.abs(dx)*0.6||performance.now()-t0>700)return;const c=navCur(),i=NAV_T.indexOf(c),j=i+(dx<0?1:-1);
+    if(j>=0&&j<NAV_T.length)navGo(NAV_T[j],dx<0?1:-1)},{passive:true})})();
 $('btnShopO').onclick=e=>{e.stopPropagation();openShop('over')};
 $('btnShopBack').onclick=()=>{$('shop').classList.add('hidden');$(shopFrom).classList.remove('hidden');
   if(shopFrom==='menu')$('menuCoins').textContent='🪙 '+coins;else $('overCoins').textContent='+'+st.coinsRun+'  ·  gesamt '+coins}
@@ -1995,7 +2024,7 @@ $('btnSet').onclick=()=>{audio();openSet('menu')};
 $('btnWheelM').onclick=openWheel;$('btnSpin').onclick=spin;$('btnWheelBack').onclick=()=>{$('wheelOv').classList.add('hidden');$('menu').classList.remove('hidden');renderWheelBadge()};
 $('btnShare').onclick=e=>{e.stopPropagation();openShare()};$('btnClipShare').onclick=e=>{e.stopPropagation();clipShare()};$('btnShareNow').onclick=shareNow;$('btnShareBack').onclick=()=>{$('shareOv').classList.add('hidden');$('over').classList.remove('hidden');st.overAt=performance.now()};
 renderWheelBadge();renderPassBadge();
-$('btnPassM').onclick=()=>{renderPass();swapOv('menu','passOv')};$('btnPassBack').onclick=()=>{renderPassBadge();swapOv('passOv','menu')};
+$('btnPassBack').onclick=()=>{renderPassBadge();swapOv('passOv','menu')};
 if(ADVENT){document.querySelector('.sign .tag').textContent='🎄 Frohe Weihnachten! 🎄';
   if(!owned.includes('xmas')){owned.push('xmas');LS.set('owned',owned);setTimeout(()=>toast('🎄 Advents-Geschenk: Skin „Weihnachten“!'),1200)}}
 if(!CG_BUILD)setTimeout(()=>{leagueWeek();leagueSettle();if(!showLogin())menuExtras()},400);else setTimeout(menuGoal,400);
@@ -2060,13 +2089,13 @@ $('nameIn').addEventListener('input',e=>setName(e.target.value,'p'));
 $('nameM').addEventListener('input',e=>setName(e.target.value,'m'));
 $('nameM').addEventListener('keydown',e=>{if(e.key==='Enter'){e.target.blur();$('btnStart').click()}});
 $('nameM').value=pname;
-$('btnBoardM').onclick=()=>openBoard('menu');
+
 $('btnChest').onclick=e=>{e.stopPropagation();openChest('over')};
 $('btnChestOk').onclick=()=>{$('chestOv').classList.add('hidden');$(chestRet).classList.remove('hidden');if(chestRet==='passOv')renderPass();st.overAt=performance.now();if(chestRet==='menu'){$('menuCoins').textContent='🪙 '+coins;$('lvlM').innerHTML=lvlHTML()}};
 $('lvlM').innerHTML=lvlHTML();
 $('btnStatsM').onclick=()=>{$('achOv').classList.add('hidden');openOv('statsOv','menu',renderStats)};
-$('btnHomeNav').onclick=()=>{sfx.click();$('menu').scrollTo({top:0,behavior:'smooth'});const b=$('btnStart');b.classList.remove('pulse');void b.offsetWidth;b.classList.add('pulse')};
-$('btnAchM').onclick=()=>openOv('achOv','menu',renderAch);
+
+
 $('btnStatsBack').onclick=()=>{$('statsOv').classList.add('hidden');$(ovFrom).classList.remove('hidden')};
 $('btnAchBack').onclick=()=>{$('achOv').classList.add('hidden');$(ovFrom).classList.remove('hidden')};
 function setPause(p){if(st.phase!=='play'&&p)return;st.paused=p;cg(S=>p?S.game.gameplayStop():S.game.gameplayStart());$('pauseOv').classList.toggle('hidden',!p);sfx.click()}
