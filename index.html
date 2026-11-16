@@ -1480,17 +1480,17 @@ function clearance(s){
 
 // ---------- events ----------
 const BOSSES={
-  bee:{n:'🐝 BOSS: HORNISSEN-KÖNIGIN',amp:92,sp:2.2,len:150,pts:22,coins:35},
-  spider:{n:'🕷 BOSS: RIESENSPINNE',amp:180,sp:1.4,len:180,pts:30,coins:50},
-  bat:{n:'🦇 BOSS: RIESEN-FLEDERMAUS',amp:140,sp:1.7,len:230,pts:38,coins:70},
-  serpent:{n:'🐍 BOSS: LINDWURM',amp:165,sp:1.9,len:400,pts:52,coins:105},
-  mother:{n:'🛸 BOSS: MUTTERSCHIFF',amp:95,sp:0.95,len:300,pts:38,coins:70},
-  dragon:{n:'🐉 ENDBOSS: HÖLLENDRACHE',amp:185,sp:1.45,len:520,pts:75,coins:200},
-  stardragon:{n:'🌌 ENDBOSS: STERNENDRACHE',amp:185,sp:1.45,len:520,pts:75,coins:200}};
+  bee:{n:'🐝 BOSS: HORNISSEN-KÖNIGIN',amp:62,sp:2.0,len:95,pts:22,coins:35},
+  spider:{n:'🕷 BOSS: RIESENSPINNE',amp:120,sp:1.25,len:105,pts:30,coins:50},
+  bat:{n:'🦇 BOSS: RIESEN-FLEDERMAUS',amp:95,sp:1.5,len:140,pts:38,coins:70},
+  serpent:{n:'🐍 BOSS: LINDWURM',amp:110,sp:1.7,len:250,pts:52,coins:105},
+  mother:{n:'🛸 BOSS: MUTTERSCHIFF',amp:62,sp:0.85,len:185,pts:38,coins:70},
+  dragon:{n:'🐉 ENDBOSS: HÖLLENDRACHE',amp:120,sp:1.3,len:330,pts:75,coins:200},
+  stardragon:{n:'🌌 ENDBOSS: STERNENDRACHE',amp:120,sp:1.3,len:330,pts:75,coins:200}};
 function bossWarn(){
   st.bossWarn=1.45;st.warnT=0;st.banner={text:L_('⚠️ ETWAS NÄHERT SICH …'),t:0};
   [70,62,56].forEach((f,i)=>tone(f,0.75,'sawtooth',0.1,0.5,i*0.3));noise(1.5,0.22,140);
-  vib([25,80,25,80,25,80,60]);st.shake=Math.max(st.shake,4);
+  vib([25,80,25,80,25,80,60]);st.shake=Math.max(st.shake,2);
 }
 function drawBossWarn(){
   const w=st.bossWarn||0;
@@ -1508,16 +1508,22 @@ function spawnBoss(force){
   const sc=st.score,space=st.py>1100,tut=force==='tut';
   const kind=tut?'bee':sc>=1000?(space?'stardragon':'dragon'):space?'mother':sc<250?'bee':sc<450?'spider':sc<700?'bat':'serpent';
   const B=tut?{n:'🐝 TUTORIAL-BOSS!',amp:45,sp:1.0,len:110,pts:10,coins:30}:BOSSES[kind];
-  const hard=tut?1:1+Math.min(0.55,sc/1400);
-  const amp=B.amp*hard,b={type:'boss',tut,kind:tut?'bee':kind,cx:st.px+540,y0:clamp(st.py+(kind==='spider'?60:0),GROUND+150+amp*0.45,1e9),ph:0,amp,sp:B.sp*hard,len:B.len,pts:B.pts,coins:B.coins,born:st.t};
+  const hard=tut?1:1+Math.min(0.3,sc/2200),sz=tut?1.4:2;
+  const amp=B.amp*hard,b={type:'boss',tut,kind:tut?'bee':kind,sz,cx:st.px+540,y0:clamp(st.py+(kind==='spider'?60:0),GROUND+200+amp*0.5+55*sz,1e9),ph:0,amp,sp:B.sp*hard,len:B.len*sz,pts:B.pts,coins:B.coins,born:st.t};
   b.minX=b.cx-260;b.maxX=b.cx+b.len+120;st.obs=st.obs.filter(o=>!(o.cx>b.cx-200&&o.cx<b.cx+b.len+120));st.obs.push(b);st.boss=b;
   st.banner={text:B.n,t:0};
-  if(kind==='dragon'||kind==='stardragon'){[98,110,123,98,82].forEach((f,i)=>tone(f,0.4,'sawtooth',0.09,0.7,i*0.22));noise(1.6,0.4,180);st.shake=18;st.flash=0.75;st.slowmo=Math.max(st.slowmo||0,0.45);vib([80,40,80,40,200])}
-  else{[196,233,262,196].forEach((f,i)=>tone(f,0.25,'sawtooth',0.08,0,i*0.2));noise(0.9,0.26,220);st.shake=13;st.flash=0.45;st.slowmo=Math.max(st.slowmo||0,0.3);vib([60,40,60,40,100])}
+  if(kind==='dragon'||kind==='stardragon'){[98,110,123,98,82].forEach((f,i)=>tone(f,0.4,'sawtooth',0.09,0.7,i*0.22));noise(1.6,0.4,180);st.shake=7;st.flash=0.75;st.slowmo=Math.max(st.slowmo||0,0.45);vib([80,40,80,40,200])}
+  else{[196,233,262,196].forEach((f,i)=>tone(f,0.25,'sawtooth',0.08,0,i*0.2));noise(0.9,0.26,220);st.shake=4.5;st.flash=0.45;st.slowmo=Math.max(st.slowmo||0,0.3);vib([60,40,60,40,100])}
 }
 const isDragon=o=>o.kind==='dragon'||o.kind==='stardragon';
 function dragonFire(o,t){const ph=((t-o.born)*0.62)%1;return {charge:ph>0.42&&ph<0.55,fire:ph>=0.55&&ph<0.8,k:ph<0.8?Math.min(1,(ph-0.55)/0.06):0}}
 function bossParts(o,t){
+  const P=bossParts0(o,t),z=o.sz||1;
+  if(z===1)return P;
+  const my=P.reduce((a,q)=>a+q.y,0)/P.length;
+  return P.map(q=>{const r={};for(const k in q)r[k]=q[k];r.x=o.cx+(q.x-o.cx)*z;r.y=my+(q.y-my)*z;r.r=q.r*z;return r})
+}
+function bossParts0(o,t){
   const w=t*o.sp;
   if(o.kind==='bee'){const y=o.y0+o.amp*Math.sin(w)+8*Math.sin(t*9);return [{x:o.cx,y,r:17},{x:o.cx+28,y:y+2,r:19},{x:o.cx+64,y:y-4,r:26}]}
   if(o.kind==='spider'){const y=o.y0+o.amp*Math.sin(w);return [{x:o.cx+10,y,r:24},{x:o.cx+52,y:y+14,r:34}]}
@@ -1805,7 +1811,7 @@ function tap(){
     st.tut++;st.omega=2.4;st.dir=-1;
     if(st.tut>3){st.tut=0;LS.set('tut',true);st.nextObsX=st.px+380;st.omega=omegaFor(st.score);st.banner={text:'LOS GEHT\'S!',t:0};
       if(!LS.get('tutBoss',false)){LS.set('tutBoss',true);setTimeout(()=>{if(st.phase!=='play'||st.boss)return;spawnBoss('tut');st.shield=true;st.tutMsg='Bau über oder unter der Hornisse vorbei – nicht berühren!';st.tutMsgT=4.5},1600)}}
-  } else if(st.mode!=='zen'&&st.score>=st.nextBoss&&!st.boss&&!(st.bossWarn>0)){bossWarn();st.nextBoss+=rnd(72,100)}
+  } else if(st.mode!=='zen'&&st.score>=st.nextBoss&&!st.boss&&!(st.bossWarn>0)){bossWarn();st.nextBoss+=rnd(120,150)}
   else if(st.mode!=='zen'&&st.score>=st.nextEvent){triggerEvent();st.nextEvent+=rnd(22,35)}
   if(st.boss&&st.px>st.boss.cx+(st.boss.len||230)){const b=st.boss;st.boss=null;st.obs=st.obs.filter(o=>o!==b);st.score+=(b.pts||15);
     if(!isAdmin()&&st.mode!=='zen'){coins+=(b.coins||25);st.coinsRun+=(b.coins||25);LS.set('coins',coins);stat('bosses',1)}
@@ -2281,7 +2287,7 @@ function update(dt){
   if(st.phase==='play')for(const k in st.buffs)if(st.buffs[k]>0){st.buffs[k]=Math.max(0,st.buffs[k]-dt);if(k==='inv'&&st.buffs[k]===0){st.invCd=INV_CD;tone(330,0.25,'triangle',0.15,0.6);freePivot()}}
   if(st.phase==='play'&&st.invCd>0)st.invCd=Math.max(0,st.invCd-dt);
   renderBuffs();
-  if(st.bossWarn>0){st.warnT=(st.warnT||0)+dt;st.bossWarn-=dt;st.shake=Math.max(st.shake,2+5*Math.abs(Math.sin(st.warnT*7)));
+  if(st.bossWarn>0){st.warnT=(st.warnT||0)+dt;st.bossWarn-=dt;st.shake=Math.max(st.shake,0.8+1.6*Math.abs(Math.sin(st.warnT*5)));
     if(st.bossWarn<=0){st.bossWarn=0;if(st.phase==='play'&&!st.boss)spawnBoss()}}
   if(st.slowmo>0){st.slowmo-=dt;dt*=0.35}
   if(st.flash>0)st.flash=Math.max(0,st.flash-dt*3);
