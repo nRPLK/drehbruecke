@@ -1413,7 +1413,7 @@ async function pushEnable(){try{const perm=await Notification.requestPermission(
   if(tk){LS.set('pushAsked','yes');await duelReq('/push/'+devId+'.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({tk,n:pname||'',l:settings.lang||'de',ls:{'.sv':'timestamp'}})});toast('🔔 Erinnerungen sind an!');
     try{await reg.showNotification(L_('🌉 Drehbrücke'),{body:L_('Erinnerungen sind aktiv – so sieht eine Meldung aus.'),icon:'icon-192.png',tag:'db-test'})}catch(e){}}}catch(e){toast('🔔 Erinnerungen gehen auf diesem Gerät leider nicht')}}
 let pushPinged=false;function pushPing(){if(!pushOn()||pushPinged||LS.get('pushAsked','')!=='yes')return;pushPinged=true;
-  duelReq('/push/'+devId+'.json',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({ls:{'.sv':'timestamp'},n:pname||''})}).catch(()=>{})}
+  duelReq('/push/'+devId+'.json',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({ls:{'.sv':'timestamp'},n:pname||'',dstk:dlyStreak(),dday:LS.get('dlyDay','')})}).catch(()=>{})}
 function pushMaybeAsk(){if(!pushOn()||LS.get('pushAsked','')||LS.get('runsTotal',0)<3||Notification.permission==='denied')return false;
   ['menu','over'].forEach(i=>$(i).classList.add('hidden'));$('pushOv').classList.remove('hidden');return true}
 
