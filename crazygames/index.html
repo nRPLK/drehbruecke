@@ -302,6 +302,8 @@ h1,.btn,.sign h1,.sign .tag,#score,.big,.tab,.coins,.coinbox,.reason,.rank,#ches
 .namebad{max-width:300px;font-size:12px;font-weight:800;color:#fff;background:#d9534f;border-radius:10px;padding:5px 10px;text-align:center}
 .namerow.bad{outline:3px solid #d9534f}.namerow.good{outline:3px solid #2e9e5b}.namebad.ok{background:#2e9e5b}
 .navbar{z-index:40!important}.navbar.hidden{display:none!important}
+.goalchip.dly{cursor:pointer;background:linear-gradient(#fff3cf,#ffe3a0);border-color:#c79a3a;color:#5a3c10;font-weight:800;animation:dlyp 2.2s ease-in-out infinite}
+@keyframes dlyp{0%,100%{box-shadow:0 3px 0 #9c7524}50%{box-shadow:0 3px 0 #9c7524,0 0 14px rgba(255,205,90,.75)}}
 #menuLinks a{color:#ffe9bf;text-decoration:underline}
 .nb.on:not(.home){color:#fff;background:rgba(255,220,150,.22)}.nb.on:not(.home) span{transform:scale(1.15)}
 .nb.home:not(.on){background:linear-gradient(#e9c58c,#c7914d);opacity:.95}
@@ -1367,7 +1369,9 @@ let invT=0;function inviteCheckFriends(){if(CG_BUILD||Date.now()-invT<60000)retu
 
 // ---------- Nächstes Ziel ----------
 let goalIdx=0,goalTimer=0;
+const dlyOpen=()=>!CG_BUILD&&LS.get('dlyDay','')!==dayKey();
 function goalList(){const G=[];
+  if(dlyOpen())G.push('📅 Tages-Challenge – heute noch offen');
   const lk=SKINS.filter(k=>k.lvl&&k.lvl>level&&!owned.includes(k.id)).sort((a,b)=>a.lvl-b.lvl)[0];
   if(lk)G.push(lk.lvl===level+1?'🎯 Noch '+(xpNeed(level)-xp)+' XP bis Level '+lk.lvl+' → '+lk.name+' 🔓':'🎯 Erreiche Level '+lk.lvl+' für den Skin '+lk.name);
   const buy=SKINS.filter(k=>!owned.includes(k.id)&&!k.chest&&!k.pass&&!k.admin&&k.price>0&&!(k.lvl&&k.lvl>level)).sort((a,b)=>a.price-b.price)[0];
@@ -1376,8 +1380,11 @@ function goalList(){const G=[];
   if(best<150)G.push('📦 Schaffe 150 Punkte in einer Runde für eine Holztruhe');else if(best<300)G.push('🎁 Schaffe 300 Punkte für eine Silbertruhe');else if(best<500)G.push('👑 Schaffe 500 Punkte für eine Goldtruhe');
   if(best<1000)G.push('🐉 Bei 1000 Punkten wartet der Höllendrache …');
   return G}
-function menuGoal(){const c=$('goalChip'),G=goalList();if(!G.length){c.classList.add('hidden');return}c.classList.remove('hidden');goalIdx=goalIdx%G.length;c.textContent=G[goalIdx];
-  clearInterval(goalTimer);goalTimer=setInterval(()=>{if($('menu').classList.contains('hidden'))return;const G2=goalList();if(!G2.length)return;goalIdx=(goalIdx+1)%G2.length;c.style.opacity=0;setTimeout(()=>{c.textContent=G2[goalIdx];c.style.opacity=1},300)},4500)}
+function menuGoal(){const c=$('goalChip'),G=goalList();if(!G.length){c.classList.add('hidden');return}c.classList.remove('hidden');
+  clearInterval(goalTimer);
+  if(dlyOpen()){goalIdx=0;c.textContent=G[0];c.classList.add('dly');c.style.opacity=1;return}
+  c.classList.remove('dly');goalIdx=goalIdx%G.length;c.textContent=G[goalIdx];
+  goalTimer=setInterval(()=>{if($('menu').classList.contains('hidden'))return;const G2=goalList();if(!G2.length)return;if(dlyOpen())return menuGoal();goalIdx=(goalIdx+1)%G2.length;c.style.opacity=0;setTimeout(()=>{c.textContent=G2[goalIdx];c.style.opacity=1},300)},4500)}
 function menuExtras(){try{menuLeague();menuGoal();instBtn();instHint();inviteCheckFriends();pushPing()}catch(e){}}
 
 // ---------- Benachrichtigungen (Push) ----------
@@ -1927,7 +1934,7 @@ function tap(){
     st.killO=o||null;if(o)reason=o.big?'Vom Adler erwischt!':{tree:'Im Baum hängen geblieben!',bird:'Vogel getroffen!',balloon:'Ballon gerammt!',zep:'Zeppelin gerammt!',ast:'Asteroid getroffen!',boss:o.type==='boss'&&isDragon(o)?'Vom Drachen erwischt! 🔥':'Vom Boss erwischt!',sat:'Satellit gerammt!',ufo:'Von einem UFO abgeschossen!',alien:'Alien erwischt dich!',bh:'Vom Schwarzen Loch verschluckt!'}[o.type]||'Hindernis getroffen!';
   }
   }
-  if(reason&&(st.nTap||0)<2&&!st.tut&&st.aimOk!==false&&st.mode!=='duel'&&st.mode!=='daily'&&st.mode!=='zen'&&st.mode!=='rush'){
+  if(reason&&(st.nTap||0)<(st.graceN||2)&&!st.tut&&st.aimOk!==false&&st.mode!=='duel'&&st.mode!=='daily'&&st.mode!=='zen'&&st.mode!=='rush'){
     a=st.aim||0;ad=Math.abs(a*180/Math.PI);seg={x1:st.px,y1:st.py,x2:st.px+LL*Math.cos(a),y2:st.py+LL*Math.sin(a)};reason=null;shielded=true;
     st.pops.push({x:st.px,y:st.py+70,text:'🍀 Glück gehabt!',col:'#b8ffb0',t:-0.2})}
   st.nTap=(st.nTap||0)+1;
@@ -2229,6 +2236,9 @@ function start(){
   st.startedAt=performance.now();
   st.mode=md;st.diff=md==='daily'||md==='duel'?'normal':diff;st.nextBoss=120;
   st.assist=skillAssist(md,st.diff);st.nTap=0;
+  {const rt=LS.get('runsTotal',0);st.graceN=rt<10?4:rt<30?3:2;
+   if(md==='daily')LS.set('dlyDay',dayKey());
+   if(rt<4&&!st.shield&&(md==='classic'||md==='daily'))st.shield=true}
   if(st.assist<0.7&&!st.shield&&md==='classic'){st.shield=true;st.pityShield=true;setTimeout(()=>toast('🛡 Start-Schild: ein Fehler ist frei!'),600)}
   st.omega=omegaFor(0);
   if(!LS.get('tut',false)&&md==='classic'){st.tut=1;st.nextObsX=1e9;st.omega=2.4}
@@ -2352,6 +2362,7 @@ $('btnInstall').onclick=async e=>{e.stopPropagation();audio();sfx.click();
 $('btnInstGo').onclick=()=>swapOv('instOv','menu');
 $('btnBackup').onclick=()=>{audio();$('bCode').textContent=bFmt(devId);$('bIn').value='';$('bBad').classList.add('hidden');bState();swapOv('profOv','backupOv')};
 $('btnAcc').onclick=()=>{audio();accUI();swapOv('profOv','accOv')};
+$('goalChip').onclick=()=>{if(!dlyOpen())return;audio();mode='daily';LS.set('mode',mode);renderModes();start()};
 $('btnAccBack').onclick=()=>swapOv('accOv','profOv');
 $('btnAccNew').onclick=e=>{e.stopPropagation();accNew()};
 $('btnAccIn').onclick=e=>{e.stopPropagation();accIn()};
