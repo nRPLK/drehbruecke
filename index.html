@@ -308,6 +308,7 @@ h1,.btn,.sign h1,.sign .tag,#score,.big,.tab,.coins,.coinbox,.reason,.rank,#ches
 .namebad{max-width:300px;font-size:12px;font-weight:800;color:#fff;background:#d9534f;border-radius:10px;padding:5px 10px;text-align:center}
 .namerow.bad{outline:3px solid #d9534f}.namerow.good{outline:3px solid #2e9e5b}.namebad.ok{background:#2e9e5b}
 .navbar{z-index:40!important}.navbar.hidden{display:none!important}
+#menuLinks a{color:#ffe9bf;text-decoration:underline}
 .nb.on:not(.home){color:#fff;background:rgba(255,220,150,.22)}.nb.on:not(.home) span{transform:scale(1.15)}
 .nb.home:not(.on){background:linear-gradient(#e9c58c,#c7914d);opacity:.95}
 body.navon #shop,body.navon #passOv,body.navon #board,body.navon #achOv{padding-bottom:calc(96px + env(safe-area-inset-bottom))!important}
@@ -351,6 +352,12 @@ body.navdrag .ov{-webkit-backdrop-filter:none!important;backdrop-filter:none!imp
   <div class="goalchip hidden" id="goalChip"></div>
   <button class="lgchip inst hidden" id="btnInstall"></button>
   <div class="muted" id="menuBest"></div>
+  <div class="muted" id="menuLinks" style="font-size:12px;opacity:.75;margin-top:2px">
+    <a href="anleitung.html" target="_blank" rel="noopener">Anleitung</a> ·
+    <a href="ueber.html" target="_blank" rel="noopener">Über das Spiel</a> ·
+    <a href="neuigkeiten.html" target="_blank" rel="noopener">Neuigkeiten</a> ·
+    <a href="datenschutz.html" target="_blank" rel="noopener">Datenschutz</a>
+  </div>
 </div>
 
 <nav class="navbar hidden" id="navbar">
@@ -2293,6 +2300,7 @@ $('btnMissM').onclick=()=>{renderMissions('missionsM');renderMissBadge&&renderMi
 [...document.querySelectorAll('#modeTabs .tab')].forEach(b=>b.onclick=()=>{mode=b.dataset.m;LS.set('mode',mode);renderModes();sfx.click()});renderModes();
 let setFrom='menu';
 function openSet(from){setFrom=from;$(from).classList.add('hidden');$('setOv').classList.remove('hidden');$('setMus').value=settings.mus;$('setSfx').value=settings.sfx;$('setVib').checked=settings.vib;$('setGfx').value=settings.gfx||'high';$('setLang').value=settings.lang||'de'}
+if(CG_BUILD){const ml=$('menuLinks');if(ml)ml.style.display='none'}
 $('btnSet').onclick=()=>{audio();openSet('menu')};
 $('btnWheelM').onclick=openWheel;$('btnSpin').onclick=()=>spin(true);
 $('btnSpinAd').onclick=e=>{e.stopPropagation();audio();watchAd(()=>{$('wheelOv').classList.remove('hidden');spin(false)},'wheelOv')};$('btnWheelBack').onclick=()=>{$('wheelOv').classList.add('hidden');$('menu').classList.remove('hidden');renderWheelBadge()};

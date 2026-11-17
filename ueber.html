@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Drehbrücke – Über das Spiel</title>
+<meta name="description" content="Wie Drehbrücke entstanden ist: die Idee hinter dem One-Tap-Brückenspiel, wie es technisch gebaut ist und was als Nächstes kommt.">
+<style>
+body{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;max-width:720px;margin:0 auto;padding:24px 18px 60px;line-height:1.55;color:#2b2118;background:#fbf6ec}
+h1{font-size:28px;margin-bottom:4px}h2{font-size:19px;margin-top:28px}
+a{color:#8a5a30}.muted{color:#7a6a58;font-size:14px}
+code{background:#efe4cf;padding:1px 5px;border-radius:4px}
+nav.top{font-size:14px;margin-bottom:18px}
+</style>
+</head>
+<body>
+<nav class="top"><a href="./">Spiel</a> · <a href="anleitung.html">Anleitung</a> · <b>Über das Spiel</b> · <a href="neuigkeiten.html">Neuigkeiten</a> · <a href="datenschutz.html">Datenschutz</a></nav>
+
+<h1>Über das Spiel</h1>
+<p class="muted">Ein Hobbyprojekt aus Vorarlberg.</p>
+
+<h2>Die Idee</h2>
+<p>Drehbrücke ist aus einer einfachen Frage entstanden: Wie wenig Steuerung braucht ein Spiel, das trotzdem schwer zu meistern ist?</p>
+<p>Die Antwort war ein einziger Tipp. Kein Wischen, keine Knöpfe, kein Menü mitten im Spiel. Ein Balken schwingt, du tippst, er bleibt stehen. Alles, was danach passiert – ob die Brücke hält, wie viele Punkte es gibt, ob die Combo weiterläuft – hängt an diesem einen Moment.</p>
+<p>Damit ist das Spiel in fünf Sekunden erklärt und nach Wochen noch nicht ausgereizt. Genau das war das Ziel.</p>
+
+<h2>Warum eine Brücke</h2>
+<p>Die meisten Endlosspiele lassen dich vor etwas davonlaufen. Hier baust du stattdessen etwas auf, und das Gebaute bleibt stehen. Wenn du zurückschaust, siehst du deine ganze Strecke – jeden sauberen Balken und jeden, bei dem du zu früh getippt hast.</p>
+<p>Das macht das Scheitern anders. Du verlierst nicht, weil dich etwas erwischt hat, sondern weil deine eigene Konstruktion nachgegeben hat. Beim Einsturz markiert das Spiel deshalb die Stelle, an der es schiefging.</p>
+
+<h2>Wie es gebaut ist</h2>
+<p>Drehbrücke ist eine einzige HTML-Datei. Darin steckt alles: die Grafik, der Ton, die Spiellogik, die Menüs, die Übersetzung. Es gibt kein Spielframework und keine Spiel-Engine, gezeichnet wird direkt auf ein Canvas-Element.</p>
+<p>Das hat einen praktischen Grund. So lädt das Spiel auf einem alten Handy in wenigen Sekunden, läuft nach dem ersten Besuch auch ohne Internet und lässt sich wie eine App auf den Homebildschirm legen, ohne dass jemand etwas aus einem Store herunterladen muss.</p>
+<p>Online ist nur, was online sein muss: Bestenlisten, Liga und Duelle. Dafür läuft eine Datenbank von Google Firebase mit Servern in der EU. Dein Spielstand selbst bleibt auf deinem Gerät.</p>
+
+<h2>Das Schwerste war die Balance</h2>
+<p>Der Teil, der am meisten Arbeit gemacht hat, ist der, den man am wenigsten sieht.</p>
+<p>Ein One-Tap-Spiel ist entweder nach drei Sekunden vorbei oder langweilig. Dazwischen liegt ein schmaler Bereich, und den trifft man nicht durch Nachdenken, sondern durch Messen. Für Drehbrücke laufen deshalb simulierte Spieler über die Strecke: vom Neuling, der um mehr als eine Zehntelsekunde danebentippt, bis zum Profi, der auf wenige Millisekunden genau trifft. An deren Überlebenszeiten lässt sich ablesen, ob eine Änderung Anfängern hilft oder nur Fortgeschrittenen.</p>
+<p>In der ersten Fassung hielt ein Neuling vier Sekunden durch. Das ist zu kurz, um zu verstehen, was man falsch macht. Heute sind es gut dreizehn, während gute Spieler genauso gefordert sind wie vorher. Dazu kommt eine stille Starthilfe: Wer mehrere Runden hintereinander früh scheitert, bekommt die ersten Sekunden etwas entschärft, ohne dass es im Spiel angezeigt wird.</p>
+
+<h2>Fairness</h2>
+<p>Sobald es eine Bestenliste gibt, versucht jemand, sie zu brechen. Deshalb hat das Spiel ein paar unauffällige Bremsen: Die Combo hat eine Obergrenze, Unsterblichkeit lässt sich nicht beliebig verlängern, und Ergebnisse, die zur gespielten Zeit nicht passen können, landen gar nicht erst in der Liste.</p>
+<p>Das ist weniger ein Misstrauen gegenüber Spielern als eine Voraussetzung dafür, dass eine Bestenliste überhaupt etwas bedeutet.</p>
+
+<h2>Was als Nächstes kommt</h2>
+<p>Das Spiel ist nicht fertig und soll es auch nicht sein. Auf der Liste stehen weitere Skins, mehr Abwechslung bei den Strecken und Erinnerungen, damit man eine laufende Liga-Woche nicht verpasst. Was wirklich gebaut wird, entscheidet sich meist daran, was Spieler zurückmelden.</p>
+<p>Alle Änderungen stehen in den <a href="neuigkeiten.html">Neuigkeiten</a>.</p>
+
+<h2>Rückmeldungen</h2>
+<p>Fehler gefunden, eine Idee, oder etwas fühlt sich unfair an? Schreib an <a href="mailto:drehbruecke.spiel@gmail.com">drehbruecke.spiel@gmail.com</a>. Jede Rückmeldung wird gelesen.</p>
+
+<p style="margin-top:36px"><a href="./">← Zurück zum Spiel</a></p>
+</body>
+</html>
