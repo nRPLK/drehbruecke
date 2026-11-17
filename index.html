@@ -1613,6 +1613,7 @@ function spawnBoss(force){
   const hard=tut?1:1+Math.min(0.3,sc/2200),sz=tut?1.4:2;
   const amp=B.amp*hard,b={type:'boss',tut,kind:tut?'bee':kind,sz,cx:st.px+540,y0:clamp(st.py+(kind==='spider'?60:0),GROUND+200+amp*0.5+55*sz,1e9),ph:0,amp,sp:B.sp*hard,len:B.len*sz,pts:B.pts,coins:B.coins,born:st.t};
   b.minX=b.cx-260;b.maxX=b.cx+b.len+120;st.obs=st.obs.filter(o=>!(o.cx>b.cx-200&&o.cx<b.cx+b.len+120));st.obs.push(b);st.boss=b;
+  if(st.nextObsX<b.maxX+160)st.nextObsX=b.maxX+160;
   st.banner={text:B.n,t:0};
   if(kind==='dragon'||kind==='stardragon'){[98,110,123,98,82].forEach((f,i)=>tone(f,0.4,'sawtooth',0.09,0.7,i*0.22));noise(1.6,0.4,180);st.shake=7;st.flash=0.75;st.slowmo=Math.max(st.slowmo||0,0.45);vib([80,40,80,40,200])}
   else{[196,233,262,196].forEach((f,i)=>tone(f,0.25,'sawtooth',0.08,0,i*0.2));noise(0.9,0.26,220);st.shake=4.5;st.flash=0.45;st.slowmo=Math.max(st.slowmo||0,0.3);vib([60,40,60,40,100])}
@@ -1915,7 +1916,7 @@ function tap(){
       if(!LS.get('tutBoss',false)){LS.set('tutBoss',true);setTimeout(()=>{if(st.phase!=='play'||st.boss)return;spawnBoss('tut');st.shield=true;st.tutMsg='Bau über oder unter der Hornisse vorbei – nicht berühren!';st.tutMsgT=4.5},1600)}}
   } else if(st.mode!=='zen'&&st.score>=st.nextBoss&&!st.boss&&!(st.bossWarn>0)){bossWarn();st.nextBoss+=rnd(120,150)}
   else if(st.mode!=='zen'&&st.score>=st.nextEvent){triggerEvent();st.nextEvent+=rnd(22,35)}
-  if(st.boss&&st.px>st.boss.cx+(st.boss.len||230)){const b=st.boss;st.boss=null;st.obs=st.obs.filter(o=>o!==b);st.score+=(b.pts||15);
+  if(st.boss&&(st.px>st.boss.cx+(st.boss.len||230)||st.obs.indexOf(st.boss)<0||st.boss.maxX<st.cam.x-600)){const b=st.boss;st.boss=null;st.obs=st.obs.filter(o=>o!==b);st.score+=(b.pts||15);
     if(!isAdmin()&&st.mode!=='zen'){coins+=(b.coins||25);st.coinsRun+=(b.coins||25);LS.set('coins',coins);stat('bosses',1)}
     st.banner={text:b.tut?'🎉 GESCHAFFT! Jetzt spielst du frei!':'🏆 BOSS BESIEGT! +'+(b.pts||15)+' · +'+(b.coins||25)+' 🪙',t:0};if(b.tut){st.tutMsg='Super! Ab jetzt ist alles frei – sammle Münzen, Truhen und Skins!';st.tutMsgT=4}cg(S=>S.game.happytime());sfx.record();st.flash=1;ring(st.px,st.py,'#ffd23a',160);updHud()}
   const wi=worldIdx();if(wi!==st.world.to){st.world={from:st.world.to,to:wi,t:0};st.banner={text:WNAMES[wi],t:0};tone(392,0.3,'triangle',0.15);tone(587,0.4,'triangle',0.15,0,0.15)}
