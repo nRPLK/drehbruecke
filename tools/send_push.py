@@ -5,7 +5,7 @@ from google.oauth2 import service_account
 from google.auth.transport.requests import Request
 
 DB = os.environ.get('FIREBASE_DB', 'https://drehbruecke-default-rtdb.europe-west1.firebasedatabase.app')
-GAME = 'https://nrplk.github.io/drehbruecke/'
+GAME = 'https://drehbruecke.com/'
 sa = json.loads(os.environ['FIREBASE_SA'])
 cred = service_account.Credentials.from_service_account_info(sa, scopes=[
     'https://www.googleapis.com/auth/firebase.database', 'https://www.googleapis.com/auth/userinfo.email',
@@ -29,29 +29,37 @@ TXT = {'de': {'daily': ('🎁 Deine Tagesbelohnung wartet!', 'Hol dir deine Mün
 now = time.time() * 1000; H = 3600e3
 subs = req(DB + '/push.json') or {}
 duels = req(DB + '/duels.json') or {}
-open_duel = {}
-for d in duels.values():
+open_duel = {}                      # Name des Herausgeforderten -> (Herausforderer, Duell-ID)
+for did, d in duels.items():
     if isinstance(d, dict) and d.get('bl') and 'sb' not in d and now - d.get('t', 0) < 48 * H:
-        open_duel[d['bl']] = d.get('a', '?')
+        prev = open_duel.get(d['bl'])
+        if not prev or d.get('t', 0) > duels[prev[1]].get('t', 0):
+            open_duel[d['bl']] = (d.get('a', '?'), did)
 sunday = time.gmtime().tm_wday == 6
 sent = 0
 for dev, s in subs.items():
     if not isinstance(s, dict) or not s.get('tk'): continue
     ls, last = s.get('ls', 0), s.get('sent', 0)
-    if now - last < 20 * H: continue          # höchstens 1× am Tag
-    lang = 'en' if s.get('l') == 'en' else 'de'; kind = None; me = (s.get('n') or '').strip().lower()
-    if me and me in open_duel: kind = 'duel'
-    elif now - ls > 30 * 24 * H: continue      # nach 30 Tagen nicht mehr nerven
-    elif now - ls > 72 * H: kind = 'away'
-    elif sunday and now - ls > 12 * H: kind = 'league'
-    elif now - ls > 20 * H: kind = 'daily'
+    lang = 'en' if s.get('l') == 'en' else 'de'; kind = None; dkey = None
+    me = (s.get('n') or '').strip().lower()
+    duel = open_duel.get(me) if me else None
+    if duel and s.get('dsent') != duel[1] and now - ls < 30 * 24 * H:
+        kind, dkey = 'duel', duel[1]          # Herausforderung: sofort, einmal pro Duell
+    else:
+        if now - last < 20 * H: continue      # alles andere höchstens 1× am Tag
+        if now - ls > 30 * 24 * H: continue   # nach 30 Tagen nicht mehr nerven
+        elif now - ls > 72 * H: kind = 'away'
+        elif sunday and now - ls > 12 * H: kind = 'league'
+        elif now - ls > 20 * H: kind = 'daily'
     if not kind: continue
-    t, b = TXT[lang][kind]; b = b.format(n=open_duel.get(me, ''))
+    t, b = TXT[lang][kind]; b = b.format(n=(duel[0] if duel else ''))
     try:
         req(f"https://fcm.googleapis.com/v1/projects/{sa['project_id']}/messages:send", {'message': {
             'token': s['tk'], 'notification': {'title': t, 'body': b},
             'webpush': {'fcm_options': {'link': GAME}}, 'data': {'url': GAME}}})
-        req(f'{DB}/push/{dev}/sent.json', now, 'PUT'); sent += 1
+        req(f'{DB}/push/{dev}/sent.json', now, 'PUT')
+        if dkey: req(f'{DB}/push/{dev}/dsent.json', dkey, 'PUT')
+        sent += 1
     except urllib.error.HTTPError as e:
         if e.code in (400, 404): req(f'{DB}/push/{dev}.json', method='DELETE')   # Token ungültig → entfernen
 print('gesendet:', sent)

@@ -1,7 +1,7 @@
 name: Erinnerungen senden
 on:
   schedule:
-    - cron: '7 16 * * *'   # täglich ca. 17:07 Uhr (Winterzeit Österreich)
+    - cron: '13 * * * *'   # stündlich – damit Duell-Herausforderungen zeitnah ankommen
   workflow_dispatch:
 jobs:
   push:
