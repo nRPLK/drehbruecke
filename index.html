@@ -872,7 +872,7 @@ function genPattern(){
   const early=st.score<25,x=st.nextObsX,diff=Math.min(1,st.score/160),roll=gR()*(early?0.62:1);
   const gap=Math.max(145,rnd(168,192)-diff*25);
   const tree=(maxTop)=>{const r=rnd(42,62);let h=rnd(90,190+diff*150);h=Math.min(h,maxTop-GROUND-r*1.55);return mkTree(x,Math.max(60,h),r)};
-  const coin=(cx,cy,p)=>{if(gR()<p*0.30*(modIs('gold')?2:1)){const g=gR()<0.02;st.coins.push({x:cx,y:clamp(cy,GROUND+45,TOP-30),ph:rnd(0,6),v:g?5:2,g})}};
+  const coin=(cx,cy,p)=>{if(gR()<p*0.30*(modIs('gold')?2:1)){const g=gR()<0.01;st.coins.push({x:cx,y:clamp(cy,GROUND+45,TOP-30),ph:rnd(0,6),v:g?15:2,g})}};
   if(roll<0.30){const t=tree(GT-170);st.obs.push(t);coin(x,t.crownTop+38,0.75)}
   else if(roll<0.48){const b=mkBird(x+rnd(0,60),rnd(GROUND+120,GT-60),rnd(30,70+diff*50),rnd(0,15+diff*35));st.obs.push(b);
     coin(b.x0-b.vx*1.5,b.y0+(gR()<0.5?1:-1)*(b.amp+52),0.6)}
