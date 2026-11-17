@@ -2,7 +2,7 @@
 
 Ein endloses One-Tap-Handyspiel: Ein Balken dreht sich – tippe im richtigen Moment und bau deine Brücke Stück für Stück weiter. Je waagrechter, desto mehr Punkte.
 
-**▶ Spielen:** https://nrplk.github.io/drehbruecke/
+**▶ Spielen:** https://drehbruecke.com
 
 ## Features
 - Perfekt-Combos mit Buffs (ab x3 unverwundbar)
