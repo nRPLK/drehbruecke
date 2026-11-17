@@ -1307,7 +1307,8 @@ async function pushEnable(){try{const perm=await Notification.requestPermission(
   await loadScript('https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js');await loadScript('https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js');
   const db=await resolveDB();if(!firebase.apps.length)firebase.initializeApp({apiKey:'AIzaSyB9TISCuJRoI_9ul6NwZuQKuhgJKcoPM-M',authDomain:'drehbruecke.firebaseapp.com',projectId:'drehbruecke',databaseURL:db,messagingSenderId:PUSH_CFG.messagingSenderId,appId:PUSH_CFG.appId});
   const tk=await firebase.messaging().getToken({vapidKey:PUSH_CFG.vapidKey,serviceWorkerRegistration:reg});
-  if(tk){LS.set('pushAsked','yes');await duelReq('/push/'+devId+'.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({tk,n:pname||'',l:settings.lang||'de',ls:{'.sv':'timestamp'}})});toast('🔔 Erinnerungen sind an!')}}catch(e){toast('🔔 Erinnerungen gehen auf diesem Gerät leider nicht')}}
+  if(tk){LS.set('pushAsked','yes');await duelReq('/push/'+devId+'.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({tk,n:pname||'',l:settings.lang||'de',ls:{'.sv':'timestamp'}})});toast('🔔 Erinnerungen sind an!');
+    try{await reg.showNotification(L_('🌉 Drehbrücke'),{body:L_('Erinnerungen sind aktiv – so sieht eine Meldung aus.'),icon:'icon-192.png',tag:'db-test'})}catch(e){}}}catch(e){toast('🔔 Erinnerungen gehen auf diesem Gerät leider nicht')}}
 let pushPinged=false;function pushPing(){if(!pushOn()||pushPinged||LS.get('pushAsked','')!=='yes')return;pushPinged=true;
   duelReq('/push/'+devId+'.json',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({ls:{'.sv':'timestamp'},n:pname||''})}).catch(()=>{})}
 function pushMaybeAsk(){if(!pushOn()||LS.get('pushAsked','')||LS.get('runsTotal',0)<3||Notification.permission==='denied')return false;
