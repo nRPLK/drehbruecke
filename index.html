@@ -1299,7 +1299,7 @@ function menuExtras(){try{menuLeague();menuGoal();instBtn();instHint();inviteChe
 
 // ---------- Benachrichtigungen (Push) ----------
 // Aus der Firebase-Konsole eintragen (Projekteinstellungen → Allgemein → Web-App, und Cloud Messaging → Web-Push-Zertifikate). Leer = aus.
-const PUSH_CFG={appId:'1:623424140047:web:423087916093b0c4e5447a',messagingSenderId:'623424140047',vapidKey:''};
+const PUSH_CFG={appId:'1:623424140047:web:423087916093b0c4e5447a',messagingSenderId:'623424140047',vapidKey:'BM45MbeKDxHgKjRxlYrl93W0Kop9dxpSjlzm_wXydAWFn2LRtLOwhHeJ9uQubwzbk8LQA2Biy-F-PdCcZ5abHxI'};
 const pushOn=()=>!CG_BUILD&&PUSH_CFG.appId&&PUSH_CFG.vapidKey&&('serviceWorker' in navigator)&&('Notification' in window);
 function loadScript(src){return new Promise((ok,no)=>{const sc=document.createElement('script');sc.src=src;sc.onload=ok;sc.onerror=no;document.head.appendChild(sc)})}
 async function pushEnable(){try{const perm=await Notification.requestPermission();if(perm!=='granted'){LS.set('pushAsked','no');return}
