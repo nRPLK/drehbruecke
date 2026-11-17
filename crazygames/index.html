@@ -1578,11 +1578,11 @@ function clearance(s){
 const BOSSES={
   bee:{n:'🐝 BOSS: HORNISSEN-KÖNIGIN',amp:62,sp:2.0,len:95,pts:22,coins:35},
   spider:{n:'🕷 BOSS: RIESENSPINNE',amp:120,sp:1.25,len:105,pts:30,coins:50},
-  bat:{n:'🦇 BOSS: RIESEN-FLEDERMAUS',amp:95,sp:1.5,len:140,pts:38,coins:70},
-  serpent:{n:'🐍 BOSS: LINDWURM',amp:110,sp:1.7,len:250,pts:52,coins:105},
-  mother:{n:'🛸 BOSS: MUTTERSCHIFF',amp:62,sp:0.85,len:185,pts:38,coins:70},
-  dragon:{n:'🐉 ENDBOSS: HÖLLENDRACHE',amp:120,sp:1.3,len:330,pts:75,coins:200},
-  stardragon:{n:'🌌 ENDBOSS: STERNENDRACHE',amp:120,sp:1.3,len:330,pts:75,coins:200}};
+  bat:{n:'🦇 BOSS: RIESEN-FLEDERMAUS',amp:95,sp:1.5,len:140,pts:38,coins:55},
+  serpent:{n:'🐍 BOSS: LINDWURM',amp:110,sp:1.7,len:250,pts:52,coins:70},
+  mother:{n:'🛸 BOSS: MUTTERSCHIFF',amp:62,sp:0.85,len:185,pts:38,coins:55},
+  dragon:{n:'🐉 ENDBOSS: HÖLLENDRACHE',amp:120,sp:1.3,len:330,pts:75,coins:120},
+  stardragon:{n:'🌌 ENDBOSS: STERNENDRACHE',amp:120,sp:1.3,len:330,pts:75,coins:120}};
 function bossWarn(){
   st.bossWarn=1.45;st.warnT=0;st.banner={text:L_('⚠️ ETWAS NÄHERT SICH …'),t:0};
   [70,62,56].forEach((f,i)=>tone(f,0.75,'sawtooth',0.1,0.5,i*0.3));noise(1.5,0.22,140);
@@ -1911,8 +1911,9 @@ function tap(){
   } else if(st.mode!=='zen'&&st.score>=st.nextBoss&&!st.boss&&!(st.bossWarn>0)){bossWarn();st.nextBoss+=rnd(120,150)}
   else if(st.mode!=='zen'&&st.score>=st.nextEvent){triggerEvent();st.nextEvent+=rnd(22,35)}
   if(st.boss&&(st.px>st.boss.cx+(st.boss.len||230)||st.obs.indexOf(st.boss)<0||st.boss.maxX<st.cam.x-600)){const b=st.boss;st.boss=null;st.obs=st.obs.filter(o=>o!==b);st.score+=(b.pts||15);
-    if(!isAdmin()&&st.mode!=='zen'){coins+=(b.coins||25);st.coinsRun+=(b.coins||25);LS.set('coins',coins);stat('bosses',1)}
-    st.banner={text:b.tut?'🎉 GESCHAFFT! Jetzt spielst du frei!':'🏆 BOSS BESIEGT! +'+(b.pts||15)+' · +'+(b.coins||25)+' 🪙',t:0};if(b.tut){st.tutMsg='Super! Ab jetzt ist alles frei – sammle Münzen, Truhen und Skins!';st.tutMsgT=4}cg(S=>S.game.happytime());sfx.record();st.flash=1;ring(st.px,st.py,'#ffd23a',160);updHud()}
+    const bn=(st.bossKills=(st.bossKills||0)+1),bMul=Math.max(0.25,Math.pow(0.75,bn-1)),bCoin=Math.max(10,Math.round((b.coins||25)*bMul));
+    if(!isAdmin()&&st.mode!=='zen'){coins+=bCoin;st.coinsRun+=bCoin;LS.set('coins',coins);stat('bosses',1)}
+    st.banner={text:b.tut?'🎉 GESCHAFFT! Jetzt spielst du frei!':'🏆 BOSS BESIEGT! +'+(b.pts||15)+' · +'+bCoin+' 🪙',t:0};if(b.tut){st.tutMsg='Super! Ab jetzt ist alles frei – sammle Münzen, Truhen und Skins!';st.tutMsgT=4}cg(S=>S.game.happytime());sfx.record();st.flash=1;ring(st.px,st.py,'#ffd23a',160);updHud()}
   const wi=worldIdx();if(wi!==st.world.to){st.world={from:st.world.to,to:wi,t:0};st.banner={text:WNAMES[wi],t:0};tone(392,0.3,'triangle',0.15);tone(587,0.4,'triangle',0.15,0,0.15)}
   updHud();
 }
